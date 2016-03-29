@@ -15,11 +15,14 @@ find_package(catkin REQUIRED COMPONENTS roscpp
                                         tf)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 find_package(Eigen3)
-find_package(OpenCV REQUIRED)
+find_package(OpenCV 3.1.0 REQUIRED)
 set(Yaml_Cpp_LIB_DIR /usr/local/lib )
 set(Yaml_Cpp_INCLUDE_DIR /usr/local/include )
-include_directories(Yaml_Cpp_INCLUDE_DIR )
-include_directories(EIGEN3_INCLUDE_DIR )
+
+include_directories(${Yaml_Cpp_INCLUDE_DIR} )
+include_directories(${PROJECT_SOURCE_DIR})
+include_directories(${EIGEN3_INCLUDE_DIR} )
+include(/usr/share/OpenCV/OpenCVConfig.cmake)
 #find_package()
 #
 #generate_dynamic_reconfigure_options(
@@ -37,6 +40,12 @@ include_directories(
         ${EIGEN3_INCLUDE_DIR}
 )
 
+get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+foreach(dir ${dirs})
+    message(STATUS "dir='${dir}'")
+endforeach()
+message(opencv_lib = ${OpenCV_LIBS})
+
 catkin_package(
         LIBRARIES ${PROJECT_NAME}
         INCLUDE_DIRS ../..
@@ -47,6 +56,9 @@ catkin_package(
 #add_dependencies( ${PROJECT_NAME}_gencfg)
 
 link_directories(/opt/)
+add_library(cxy_lsdslam_lib src/tracker/Tracker.cpp
+                            src/utility/ImageHelper.cpp src/utility/ImageHelper.h src/utility/ParameterServer.cpp src/utility/ParameterServer.h)
 add_executable(cxy_lsd_main src/main.cpp)
-target_link_libraries(cxy_lsd_main  ${catkin_LIBRARIES} /usr/local/lib/libyaml-cpp.so ${OpenCV_LIBS})
+target_link_libraries(cxy_lsd_main  cxy_lsdslam_lib
+                            ${catkin_LIBRARIES} /usr/local/lib/libyaml-cpp.so ${OpenCV_LIBS})
 
