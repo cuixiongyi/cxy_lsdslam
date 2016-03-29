@@ -65,19 +65,20 @@ int main()
 
 
     K_new = cv::getOptimalNewCameraMatrix(K, distCoeffs, imgTmp.size(), 0);
-    ROS_INFO("%f %f %f %f", K.at<float>(0,0), K.at<float>(1,1), K.at<float>(0,2), K.at<float>(1,2));
-    ROS_INFO("%f %f %f %f", K_new.at<float>(0,0), K_new.at<float>(1,1), K_new.at<float>(0,2), K_new.at<float>(1,2));
+//    ROS_INFO("%f %f %f %f", K.at<float>(0,0), K.at<float>(1,1), K.at<float>(0,2), K.at<float>(1,2));
+//    ROS_INFO("%f %f %f %f", K_new.at<float>(0,0), K_new.at<float>(1,1), K_new.at<float>(0,2), K_new.at<float>(1,2));
     cv::initUndistortRectifyMap(K, distCoeffs, cv::Mat(), K_new, imgTmp.size(), CV_32FC1, map1, map2);
-    ROS_INFO("%f %f %f %f", distCoeffs.at<float>(0), distCoeffs.at<float>(1), distCoeffs.at<float>(2), distCoeffs.at<float>(3));
-    ROS_INFO("%f %f %f %f", map1.at<float>(0,0), map1.at<float>(1,1), map1.at<float>(10,20), map1.at<float>(100,200));
+//    ROS_INFO("%f %f %f %f", distCoeffs.at<float>(0), distCoeffs.at<float>(1), distCoeffs.at<float>(2), distCoeffs.at<float>(3));
+//    ROS_INFO("%f %f %f %f", map1.at<float>(0,0), map1.at<float>(1,1), map1.at<float>(10,20), map1.at<float>(100,200));
     cv::waitKey(0);
     for(auto filename : files)
     {
         cv::Mat imgRaw = cv::imread(filename, CV_LOAD_IMAGE_GRAYSCALE);
         cv::Mat imgUndistort;
         cv::remap(imgRaw, imgUndistort, map1, map2, cv::INTER_LINEAR);
-        cv::imshow("imgRaw", imgRaw);
+//        cv::imshow("imgRaw", imgRaw);
         cv::imshow("imgUndistort", imgUndistort);
+
 
         cv::waitKey(0);
 
