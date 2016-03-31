@@ -15,7 +15,7 @@
 namespace cxy{
 
     template <class T>
-    using Pointer = std::unique_ptr<T, decltype(std::free)*>;
+    using Pointer = std::unique_ptr<T>;
 
     /// vector to a unique_ptr
     /// unique_ptr point to a trunk of memory: std::unique_ptr<int[]> my_array(new int[5]);
