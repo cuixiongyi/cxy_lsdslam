@@ -39,8 +39,21 @@ namespace cxy
         cv::imshow("imagePointerTest", imageTest2);
         cv::waitKey(0);
 
+        buildImagePyramid(3);
 
     }
+    void Frame::buildImagePyramid(int ii)
+    {
+        for (int ii = 0; ii < ii; ++ii)
+        {
+            buildImage(ii);
+            buildGraident(ii);
+            buildIDepthMap(ii);
+            buildIdepthVar(ii);
+        }
+
+    }
+
 
     void Frame::initialize(int id, int width, int height, const Eigen::Matrix3f& K, double timestamp)
     {
@@ -62,5 +75,57 @@ namespace cxy
         this->mTimeStamp = timestamp;
 
     }
+
+    void Frame::buildImage(int ii)
+    {
+        if (0 == ii)
+            return;
+        mData.width.push_back(mData.width[ii-1]/2);
+        mData.height.push_back(mData.height[ii-1]/2);
+        mData.fx.push_back(mData.fx[ii-1] * 0.5);
+        mData.fy.push_back(mData.fy[ii-1] * 0.5);
+        mData.cx.push_back((mData.cx[0] + 0.5) / ((int)1<<ii) - 0.5);
+        mData.cy.push_back((mData.cy[0] + 0.5) / ((int)1<<ii) - 0.5);
+
+        Eigen::Matrix3f tmp;
+        tmp.setZero();
+        tmp  << mData.fx[ii], 0.0, mData.cx[ii], 0.0, mData.fy[ii], mData.cy[ii], 0.0, 0.0, 1.0;	// synthetic
+        mData.K.push_back(tmp);
+        mData.KInv.push_back(tmp.inverse());
+
+        mData.fxInv.push_back(mData.KInv[ii](0,0));
+        mData.fyInv.push_back(mData.KInv[ii](1,1));
+        mData.cxInv.push_back(mData.KInv[ii](0,2));
+        mData.cyInv.push_back(mData.KInv[ii](1,2));
+
+        int width = mData.width[ii-1];
+        int height = mData.height[ii-1];
+
+        const float* source = mData.image[ii-1].get();
+        float* dest = mData.image[ii-1].get();
+        int wh = width*height;
+        const float* s;
+
+        for(int y=0;y<wh;y+=width*2)
+        {
+            for(int x=0;x<width;x+=2)
+            {
+                s = source + x + y;
+                *dest = (s[0] +
+                         s[1] +
+                         s[width] +
+                         s[1+width]) * 0.25f;
+                dest++;
+            }
+        }
+
+    }
+
+    void Frame::buildGraident(int ii)
+    {
+
+
+    }
+
 
 }

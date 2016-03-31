@@ -66,6 +66,11 @@ namespace cxy{
         template <typename T>
         Pointer<T> unique_ptr_allocator(unsigned int size);
 
+        void buildImagePyramid(int level);
+        void buildImage(int ii);
+        void buildGraident(int ii);
+        void buildIDepthMap(int ii);
+        void buildIdepthVar(int ii);
     public:
 
         Frame(int id, int width, int height, const Eigen::Matrix3f& K, double timestamp, const unsigned char* image);
