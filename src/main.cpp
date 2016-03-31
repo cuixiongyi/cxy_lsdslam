@@ -4,6 +4,7 @@
 #include <iostream>
 #include "ros/ros.h"
 #include <dirent.h>
+#include <src/DataStructure/Frame.h>
 #include "opencv2/opencv.hpp"
 
 #include "sophus/sophus.hpp"
@@ -65,12 +66,23 @@ int main()
 
 
     K_new = cv::getOptimalNewCameraMatrix(K, distCoeffs, imgTmp.size(), 0);
+    Eigen::Matrix3f K_new_eigen;
+    K_new_eigen.setZero();
+    K_new_eigen(0, 0) = K_new.at<float>(0, 0);
+    K_new_eigen(0, 2) = K_new.at<float>(0, 2);
+    K_new_eigen(1, 1) = K_new.at<float>(1, 1);
+    K_new_eigen(1, 2) = K_new.at<float>(1, 2);
+    K_new_eigen(2, 2) = K_new.at<float>(2, 2);
+
 //    ROS_INFO("%f %f %f %f", K.at<float>(0,0), K.at<float>(1,1), K.at<float>(0,2), K.at<float>(1,2));
 //    ROS_INFO("%f %f %f %f", K_new.at<float>(0,0), K_new.at<float>(1,1), K_new.at<float>(0,2), K_new.at<float>(1,2));
     cv::initUndistortRectifyMap(K, distCoeffs, cv::Mat(), K_new, imgTmp.size(), CV_32FC1, map1, map2);
 //    ROS_INFO("%f %f %f %f", distCoeffs.at<float>(0), distCoeffs.at<float>(1), distCoeffs.at<float>(2), distCoeffs.at<float>(3));
 //    ROS_INFO("%f %f %f %f", map1.at<float>(0,0), map1.at<float>(1,1), map1.at<float>(10,20), map1.at<float>(100,200));
     cv::waitKey(0);
+    int idx = 0;
+    double timeStampFake = 0;
+    const double timeInterval = 0.03;
     for(auto filename : files)
     {
         cv::Mat imgRaw = cv::imread(filename, CV_LOAD_IMAGE_GRAYSCALE);
@@ -79,9 +91,10 @@ int main()
 //        cv::imshow("imgRaw", imgRaw);
         cv::imshow("imgUndistort", imgUndistort);
 
-
+        cxy::Frame frame(idx, width, height, K_new_eigen, timeStampFake, imgUndistort.data );
         cv::waitKey(0);
-
+        idx++;
+        timeStampFake += timeInterval;
 
     }
 
