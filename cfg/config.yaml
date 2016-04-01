@@ -6,3 +6,10 @@ dist_1: 0.0
 dist_2: 0.0
 dist_3: 0.0
 dist_4: 0.0
+
+
+
+
+
+# Debug
+gradient_display_factor: 100

@@ -11,6 +11,7 @@
 #include "Eigen/Eigen"
 
 #include "utility/ParameterServer.h"
+#include "utility/DebugUtility.h"
 
 namespace cxy{
 
@@ -67,15 +68,17 @@ namespace cxy{
         Pointer<T> unique_ptr_allocator(unsigned int size);
 
         void buildImagePyramid(int level);
-        void buildImage(int ii);
-        void buildGraident(int ii);
-        void buildIDepthMap(int ii);
-        void buildIdepthVar(int ii);
+        void buildImage(int level);
+        void buildGraident(int level);
+
+        void buildInvDepthPyramid(int level);
+        void buildIDepthMap(int level);
+        void buildIdepthVar(int level);
     public:
 
         Frame(int id, int width, int height, const Eigen::Matrix3f& K, double timestamp, const unsigned char* image);
 
-        void initialize(int id, int width, int height, const Eigen::Matrix3f& K, double timestamp);
+        void initialize(int id, int width, int height, const Eigen::Matrix3f& K, double timestamp, const unsigned char* image);
 
 
     };
