@@ -65,7 +65,7 @@ namespace cxy{
         Data mData;
 
         template <typename T>
-        ArrayPointer<T>&& ArrayPointer_Allocator(unsigned int size);
+        ArrayPointer<T> ArrayPointer_Allocator(unsigned int size);
 
         void buildImagePyramid(int level);
         void buildImage(int level);
