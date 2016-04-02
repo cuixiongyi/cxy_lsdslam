@@ -63,6 +63,7 @@ namespace cxy{
 
         };
         Data mData;
+        const int _MaxImagePyramidLevel;
 
         template <typename T>
         ArrayPointer<T> ArrayPointer_Allocator(unsigned int size);
@@ -75,7 +76,8 @@ namespace cxy{
         void buildIDepthMap_Var(int level);
 
         bool isHasDepth = false;
-        void setDepth(uchar* idepth, bool isInversDepth, uchar* idepthVar = nullptr);
+
+        void convertRawDepthImage(const cv::Mat& input, cv::Mat& output, float scale);
 
 
     public:
@@ -83,6 +85,7 @@ namespace cxy{
         Frame(int id, int width, int height, const Eigen::Matrix3f& K, double timestamp, const unsigned char* image);
 
         void initialize(int id, int width, int height, const Eigen::Matrix3f& K, double timestamp, const unsigned char* image);
+        void setDepth(uchar* idepth, bool isInversDepth, uchar* idepthVar = nullptr);
 
 
     };

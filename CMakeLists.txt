@@ -59,7 +59,9 @@ link_directories(/opt/)
 add_library(cxy_lsdslam_lib src/tracker/Tracker.cpp
                             src/utility/ImageHelper.cpp src/utility/ImageHelper.h
                             src/utility/ParameterServer.cpp src/utility/ParameterServer.h
-                            src/DataStructure/Frame.cpp src/DataStructure/Frame.h src/utility/DebugUtility.cpp src/utility/DebugUtility.cpp src/utility/DebugUtility.h)
+                            src/DataStructure/Frame.cpp src/DataStructure/Frame.h
+                            src/utility/DebugUtility.cpp  src/utility/DebugUtility.h)
+
 add_executable(cxy_lsd_main src/main.cpp)
 target_link_libraries(cxy_lsd_main  cxy_lsdslam_lib
                             ${catkin_LIBRARIES} /usr/local/lib/libyaml-cpp.so ${OpenCV_LIBS})

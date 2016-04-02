@@ -5,6 +5,7 @@
 #include "ros/ros.h"
 #include <dirent.h>
 #include <src/DataStructure/Frame.h>
+#include <src/utility/ImageHelper.h>
 #include "opencv2/opencv.hpp"
 
 #include "sophus/sophus.hpp"
@@ -30,18 +31,25 @@ int main()
 
 //    Sophus::Matrix3f K;
 //    K << fx, 0.0, cx, 0.0, fy, cy, 0.0, 0.0, 1.0;
-    std::string source;
-    std::vector<std::string> files;
-    source = "/home/xiongyi/workspace/src/lsd_slam/images";
-
-    if(getdir(source, files) <= 0)
+    std::string source_dir = cxy::ParameterServer::getParameter<std::string>("file_dir");
+    std::string rgb_dir = "rgb";
+    std::string depth_dir = "depth";
+    std::vector<std::string> rgb_files;
+    std::vector<std::string> depth_files;
+    ROS_INFO_STREAM("RGB image dir : "<<(source_dir+rgb_dir));
+    if(getdir(source_dir+rgb_dir, rgb_files) <= 0)
     {
-        printf("found %d files, the first one is %s\n", (int)files.size(), files[0].c_str());
+        printf("found %d rgb_files, the first one is %s\n", (int)rgb_files.size(), rgb_files[0].c_str());
     }
+    if(getdir(source_dir+depth_dir, depth_files) <= 0)
+    {
+        printf("found %d depth_files, the first one is %s\n", (int)depth_files.size(), depth_files[0].c_str());
+    }
+    assert(rgb_files.size() == depth_files.size());
 
     //// initializ
     cv::Mat map1, map2;
-    cv::Mat imgTmp = cv::imread(files[0], CV_LOAD_IMAGE_GRAYSCALE);
+    cv::Mat imgTmp = cv::imread(rgb_files[0], CV_LOAD_IMAGE_GRAYSCALE);
     int width = imgTmp.cols;
     int height = imgTmp.rows;
     cv::Mat K = cv::Mat(3, 3, CV_32F, cv::Scalar(0));
@@ -80,20 +88,26 @@ int main()
 //    ROS_INFO("%f %f %f %f", distCoeffs.at<float>(0), distCoeffs.at<float>(1), distCoeffs.at<float>(2), distCoeffs.at<float>(3));
 //    ROS_INFO("%f %f %f %f", map1.at<float>(0,0), map1.at<float>(1,1), map1.at<float>(10,20), map1.at<float>(100,200));
     cv::waitKey(0);
-    int idx = 0;
     double timeStampFake = 0;
     const double timeInterval = 0.03;
-    for(auto filename : files)
+    for (int ii = 0; ii < rgb_files.size(); ++ii)
     {
-        cv::Mat imgRaw = cv::imread(filename, CV_LOAD_IMAGE_GRAYSCALE);
+        cv::Mat imgRaw = cv::imread(rgb_files[ii], CV_LOAD_IMAGE_GRAYSCALE);
+        cv::Mat imgDepthRaw = cv::imread(depth_files[ii], -1);
+        cv::imshow( "depthRaw", imgDepthRaw);
+        cv::Mat imgDepth;
+        ImageHelper::convertRawDepthImage(imgDepthRaw, imgDepth);
+        //ROS_INFO("Depth image at: %f %f %f", imgDepth.at<float>(50, 100), imgDepth.at<float>(100,100), imgDepth.at<float>(300,300));
+
+//        cxy::DebugUtility::DisplayImage(imgDepth, "depthImage");
         cv::Mat imgUndistort;
         cv::remap(imgRaw, imgUndistort, map1, map2, cv::INTER_LINEAR);
-//        cv::imshow("imgRaw", imgRaw);
+
         cv::imshow("imgUndistort", imgUndistort);
 
-        cxy::Frame frame(idx, width, height, K_new_eigen, timeStampFake, imgUndistort.data );
+        cxy::Frame frame(ii, width, height, K_new_eigen, timeStampFake, imgUndistort.data );
+        frame.setDepth(imgDepth.data, false);
         cv::waitKey(0);
-        idx++;
         timeStampFake += timeInterval;
 
     }

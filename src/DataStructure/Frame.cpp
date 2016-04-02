@@ -16,13 +16,14 @@ namespace cxy
     }
 
     Frame::Frame(int id, int width, int height, const Eigen::Matrix3f& K, double timestamp, const unsigned char* image)
+    : _MaxImagePyramidLevel(3)
     {
         initialize(id, width, height, K, timestamp, image);
 //        mData.image[0] = ArrayPointer_Allocator<float>(width*height);
 //        mData.image[0] = std::unique_ptr<float, decltype(std::free)*>(reinterpret_cast<float*>(std::malloc(width*height*sizeof(float))), std::free);
 
 
-        buildImagePyramid(3);
+        buildImagePyramid(_MaxImagePyramidLevel);
 
     }
     void Frame::buildImagePyramid(int level)
@@ -33,7 +34,7 @@ namespace cxy
             //cxy::DebugUtility::DisplayImage(mData.width[ii], mData.height[ii], CV_32FC1, mData.image[ii].get(), "PyramidTest");
             buildGradient(ii);
             buildMaxGradient(ii);
-            cxy::DebugUtility::DisplayImage(mData.width[ii], mData.height[ii], CV_32FC1, mData.maxGradients[ii].get(), "PyramidTest");
+            //cxy::DebugUtility::DisplayImage(mData.width[ii], mData.height[ii], CV_32FC1, mData.maxGradients[ii].get(), "MaxGradient", true);
 
             /// test gradient image
             /*
@@ -57,7 +58,9 @@ namespace cxy
 
     void Frame::buildInvDepthPyramid(int level)
     {
-        buildIDepthMap_Var(level);
+        for (int i = 0; i < level; ++i) {
+            buildIDepthMap_Var(i);
+        }
     }
 
     void Frame::initialize(int id, int width, int height, const Eigen::Matrix3f& K, double timestamp, const unsigned char* image)
@@ -272,7 +275,7 @@ namespace cxy
         }
         if (nullptr != idepthVarInput)
         {
-            depthVarFunc = [&](float const& x)  {return x;};
+            depthVarFunc = [](float const& x)  {return x;};
         }
         else
         {
@@ -303,8 +306,12 @@ namespace cxy
             ++idepthVarItr;
             ++idepthVarInput2;
         }
-
+        DebugUtility::DisplayImage(width, height, CV_32F, mData.idepth[0].get(), "idepth");
         isHasDepth = true;
+        for (int ii = 1; ii < _MaxImagePyramidLevel; ++ii)
+        {
+            buildIDepthMap_Var(ii);
+        }
     }
 
     void Frame::buildMaxGradient(int level) {
@@ -374,6 +381,7 @@ namespace cxy
         }
 
     }
+
 
 
 }
