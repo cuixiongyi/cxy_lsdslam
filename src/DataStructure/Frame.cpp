@@ -10,15 +10,15 @@
 namespace cxy
 {
     template <class T>
-        Pointer<T> Frame::unique_ptr_allocator(unsigned int size)
+        ArrayPointer<T>&& Frame::ArrayPointer_Allocator(unsigned int size)
     {
-        return Pointer<T>(new T[size]);
+        return std::move(ArrayPointer<T>(new T[size]));
     }
 
     Frame::Frame(int id, int width, int height, const Eigen::Matrix3f& K, double timestamp, const unsigned char* image)
     {
         initialize(id, width, height, K, timestamp, image);
-//        mData.image[0] = unique_ptr_allocator<float>(width*height);
+//        mData.image[0] = ArrayPointer_Allocator<float>(width*height);
 //        mData.image[0] = std::unique_ptr<float, decltype(std::free)*>(reinterpret_cast<float*>(std::malloc(width*height*sizeof(float))), std::free);
 
 
@@ -31,13 +31,13 @@ namespace cxy
         {
             buildImage(ii);
             //cxy::DebugUtility::DisplayImage(mData.width[ii], mData.height[ii], CV_32FC1, mData.image[ii].get(), "PyramidTest");
-            buildGraident(ii);
+            buildGradient(ii);
 
             /// test gradient image
             /*
             const float display_factor = ParameterServer::getParameter<float>("gradient_display_factor");
             unsigned int size = mData.width[ii]*mData.height[ii];
-            auto gradient = unique_ptr_allocator<float>(size);
+            auto gradient = ArrayPointer_Allocator<float>(size);
             float* imagePointer = gradient.get();
             Eigen::Vector4f* gradPointer = mData.gradient[ii].get();
             for (int jj = 0; jj < size; ++jj) {
@@ -55,8 +55,7 @@ namespace cxy
 
     void Frame::buildInvDepthPyramid(int level)
     {
-        buildIDepthMap(level);
-        buildIdepthVar(level);
+        buildIDepthMap_Var(level);
     }
 
     void Frame::initialize(int id, int width, int height, const Eigen::Matrix3f& K, double timestamp, const unsigned char* image)
@@ -79,7 +78,7 @@ namespace cxy
         this->mTimeStamp = timestamp;
 
 
-        mData.image.push_back(std::move(unique_ptr_allocator<float>(width*height)));
+        mData.image.push_back(std::move(ArrayPointer_Allocator<float>(width * height)));
         float* maxPt = mData.image[0].get() + mData.width[0]*mData.height[0];
         for(float* pt = mData.image[0].get(); pt < maxPt; pt++)
         {
@@ -121,7 +120,7 @@ namespace cxy
         int width = mData.width[level-1];
         int height = mData.height[level-1];
 
-        mData.image.push_back(std::move(unique_ptr_allocator<float>(width*height)));
+        mData.image.push_back(std::move(ArrayPointer_Allocator<float>(width * height)));
         const float* source = mData.image[level-1].get();
         float* dest = mData.image[level].get();
         int wh = width*height;
@@ -141,13 +140,13 @@ namespace cxy
         }
     }
 
-    void Frame::buildGraident(int level)
+    void Frame::buildGradient(int level)
     {
         int width = mData.width[level];
         int height = mData.height[level];
         const float* img_pt = mData.image[level].get() + width;
         const float* img_pt_max = mData.image[level].get()  + width*(height-1);
-        mData.gradient.push_back(std::move(unique_ptr_allocator<Eigen::Vector4f>(width*height)));
+        mData.gradient.push_back(std::move(ArrayPointer_Allocator<Eigen::Vector4f>(width * height)));
         Eigen::Vector4f* gradxyii_pt = mData.gradient[level].get() + width;
 
         // in each iteration i need -1,0,p1,mw,pw
@@ -168,11 +167,209 @@ namespace cxy
 
     }
 
-    void Frame::buildIDepthMap(int level) {
+    void Frame::buildIDepthMap_Var(int level)
+    {
+
+        if ( ! isHasDepth)
+            return;
+        if (0 == level)
+            return;
+        auto width = mData.width[level];
+        auto height = mData.height[level];
+        auto size = width*height;
+
+        mData.idepth.push_back(ArrayPointer_Allocator<float>(size));
+        mData.idepthVar.push_back(ArrayPointer_Allocator<float>(size));
+
+        float *const idepthPointer = mData.idepth[level].get();
+        float *const idepthVarPointer = mData.idepthVar[level].get();
+
+        int sw = mData.width[level - 1];
+
+        const float* idepthSource = mData.idepth[level - 1].get();
+        const float* idepthVarSource = mData.idepthVar[level - 1].get();
+        float* idepthDest = idepthPointer;
+        float* idepthVarDest = idepthVarPointer;
+
+        for(int y=0;y<height;y++)
+        {
+            for(int x=0;x<width;x++)
+            {
+                int idx = 2*(x+y*sw);
+                int idxDest = (x+y*width);
+
+                float idepthSumsSum = 0;
+                float ivarSumsSum = 0;
+                int num=0;
+
+                // build sums
+                float ivar;
+                float var = idepthVarSource[idx];
+                if(var > 0)
+                {
+                    ivar = 1.0f / var;
+                    ivarSumsSum += ivar;
+                    idepthSumsSum += ivar * idepthSource[idx];
+                    num++;
+                }
+
+                var = idepthVarSource[idx+1];
+                if(var > 0)
+                {
+                    ivar = 1.0f / var;
+                    ivarSumsSum += ivar;
+                    idepthSumsSum += ivar * idepthSource[idx+1];
+                    num++;
+                }
+
+                var = idepthVarSource[idx+sw];
+                if(var > 0)
+                {
+                    ivar = 1.0f / var;
+                    ivarSumsSum += ivar;
+                    idepthSumsSum += ivar * idepthSource[idx+sw];
+                    num++;
+                }
+
+                var = idepthVarSource[idx+sw+1];
+                if(var > 0)
+                {
+                    ivar = 1.0f / var;
+                    ivarSumsSum += ivar;
+                    idepthSumsSum += ivar * idepthSource[idx+sw+1];
+                    num++;
+                }
+
+                if(num > 0)
+                {
+                    float depth = ivarSumsSum / idepthSumsSum;
+                    idepthDest[idxDest] = 1.0f / depth;
+                    idepthVarDest[idxDest] = num / ivarSumsSum;
+                }
+                else
+                {
+                    idepthDest[idxDest] = -1;
+                    idepthVarDest[idxDest] = -1;
+                }
+            }
+        }
 
     }
 
-    void Frame::buildIdepthVar(int level) {
+    void Frame::setDepth(uchar* idepthInput, bool isInversDepth, uchar* idepthVarInput) {
+        static const float _IDepthVar = ParameterServer::getParameter<float>("IDepthVar");
+        std::function<float(float const&)> depthFunc = nullptr;
+        std::function<float(float const&)> depthVarFunc = nullptr;
+        if (isInversDepth)
+        {
+            depthFunc = [](float const& x)  {return x;};
+        }
+        else
+        {
+            depthFunc = [](float const& x)  {return 1 / x;};
+        }
+        if (nullptr != idepthVarInput)
+        {
+            depthVarFunc = [&](float const& x)  {return x;};
+        }
+        else
+        {
+            depthVarFunc = [&](float const& x)  {return _IDepthVar;};
+        }
+            auto idepthInput2 = reinterpret_cast<float *>(idepthInput);
+        auto idepthVarInput2 = reinterpret_cast<float *>(idepthVarInput);
+//        idepthVarInput = (float*)idepthVarInput;
+        auto width = mData.width[0];
+        auto height = mData.height[0];
+        auto size = width * height;
+        mData.idepth.push_back(ArrayPointer_Allocator<float>(size));
+        mData.idepthVar.push_back(ArrayPointer_Allocator<float>(size));
+
+        float *const idepthPointer = mData.idepth[0].get();
+        float *const idepthVarPointer = mData.idepthVar[0].get();
+        float *const idepthPointerEnd = idepthPointer + size;
+
+        float *idepthItr = idepthPointer;
+        float *idepthVarItr = idepthPointer;
+        for (; idepthItr < idepthPointerEnd;)
+        {
+            /// assuming the input depth is metric
+            *idepthItr = depthFunc(*idepthInput2);
+            *idepthVarItr = depthVarFunc(*idepthVarInput2);
+            ++idepthItr;
+            ++idepthInput2;
+            ++idepthVarItr;
+            ++idepthVarInput2;
+        }
+
+        isHasDepth = true;
+    }
+
+    void Frame::buildMaxGradient(int level) {
+        static float _Graident_Threshold = ParameterServer::getParameter<float>("Graident_Threshold");
+
+        const int width = mData.width[level];
+        const int height = mData.height[level];
+
+        mData.maxGradients.push_back(ArrayPointer_Allocator<float>(width * height));
+        float *const _MaxGradientPointer = mData.maxGradients[level].get();
+
+        auto gradientTmpPointer = ArrayPointer_Allocator<float>(width * height);
+        float *const _maxGradTempPointer = gradientTmpPointer.get();
+
+
+        // 1. write abs gradients in real mData.
+        Eigen::Vector4f* gradxyii_pt = mData.gradient[level].get() + width;
+        float* maxgrad_pt = _MaxGradientPointer + width;
+        float* maxgrad_pt_max = maxgrad_pt + width*(height-1);
+
+        for(; maxgrad_pt < maxgrad_pt_max; maxgrad_pt++, gradxyii_pt++)
+        {
+            float dx = *((float*)gradxyii_pt);
+            float dy = *(1+(float*)gradxyii_pt);
+            *maxgrad_pt = sqrtf(dx*dx + dy*dy);
+        }
+
+        // 2. smear up/down direction into temp buffer
+        maxgrad_pt = _MaxGradientPointer + width + 1;
+        maxgrad_pt_max = _MaxGradientPointer + width*(height-1)-1;
+        float* maxgrad_t_pt = _maxGradTempPointer + width+1;
+        for(;maxgrad_pt<maxgrad_pt_max; maxgrad_pt++, maxgrad_t_pt++)
+        {
+            float g1 = maxgrad_pt[-width];
+            float g2 = maxgrad_pt[0];
+            if(g1 < g2) g1 = g2;
+            float g3 = maxgrad_pt[width];
+            if(g1 < g3)
+                *maxgrad_t_pt = g3;
+            else
+                *maxgrad_t_pt = g1;
+        }
+
+        float numMappablePixels = 0;
+        // 2. smear left/right direction into real mData
+        maxgrad_pt = _MaxGradientPointer + width+1;
+        maxgrad_pt_max = _MaxGradientPointer + width*(height-1)-1;
+        maxgrad_t_pt = _maxGradTempPointer + width+1;
+        for(;maxgrad_pt<maxgrad_pt_max; maxgrad_pt++, maxgrad_t_pt++)
+        {
+            float g1 = maxgrad_t_pt[-1];
+            float g2 = maxgrad_t_pt[0];
+            if(g1 < g2) g1 = g2;
+            float g3 = maxgrad_t_pt[1];
+            if(g1 < g3)
+            {
+                *maxgrad_pt = g3;
+                if(g3 >= _Graident_Threshold)
+                    numMappablePixels++;
+            }
+            else
+            {
+                *maxgrad_pt = g1;
+                if(g1 >= _Graident_Threshold)
+                    numMappablePixels++;
+            }
+        }
 
     }
 

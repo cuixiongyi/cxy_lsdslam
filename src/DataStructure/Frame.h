@@ -16,12 +16,12 @@
 namespace cxy{
 
     template <class T>
-    using Pointer = std::unique_ptr<T>;
+    using ArrayPointer = std::unique_ptr<T[]>;
 
     /// vector to a unique_ptr
     /// unique_ptr point to a trunk of memory: std::unique_ptr<int[]> my_array(new int[5]);
     template <class T>
-    using Pointer_Vector = std::vector<Pointer<T> >;
+    using ArrayPointer_Vector = std::vector<ArrayPointer<T> >;
 
 
     class Frame {
@@ -34,7 +34,7 @@ namespace cxy{
 
         struct Data
         {
-            using Pointer_Vector_bool = cxy::Pointer_Vector<bool>;
+            using Pointer_Vector_bool = cxy::ArrayPointer_Vector<bool>;
 
             std::vector<int> width, height;
 
@@ -42,38 +42,42 @@ namespace cxy{
             std::vector<float> fx, fy, cx, cy;
             std::vector<float> fxInv, fyInv, cxInv, cyInv;
 
-            Pointer_Vector<float> image;
+            ArrayPointer_Vector<float> image;
             Pointer_Vector_bool imageValid;
 
-            Pointer_Vector<Eigen::Vector4f> gradient;
+            ArrayPointer_Vector<Eigen::Vector4f> gradient;
             Pointer_Vector_bool gradientValid;
 
-            Pointer_Vector<float> maxGradients;
+            ArrayPointer_Vector<float> maxGradients;
             Pointer_Vector_bool maxGradientsValid;
 
             /// std::unique_ptr<int[]> my_array(new int[5]);
             // negative depthvalues are actually allowed, so setting this to -1 does NOT invalidate the pixel's depth.
             // a pixel is valid iff idepthVar[i] > 0. Reference LSD-SLAM_core/Frame.h
-            Pointer_Vector<float> idepth;
+            ArrayPointer_Vector<float> idepth;
             Pointer_Vector_bool idepthValid;
 
             // MUST contain -1 for invalid pixel (that dont have depth)!!
-            Pointer_Vector<float> idepthVar;
+            ArrayPointer_Vector<float> idepthVar;
             Pointer_Vector_bool idepthVarValid;
 
         };
         Data mData;
 
         template <typename T>
-        Pointer<T> unique_ptr_allocator(unsigned int size);
+        ArrayPointer<T>&& ArrayPointer_Allocator(unsigned int size);
 
         void buildImagePyramid(int level);
         void buildImage(int level);
-        void buildGraident(int level);
-
+        void buildGradient(int level);
+        void buildMaxGradient(int level);
         void buildInvDepthPyramid(int level);
-        void buildIDepthMap(int level);
-        void buildIdepthVar(int level);
+        void buildIDepthMap_Var(int level);
+
+        bool isHasDepth = false;
+        void setDepth(uchar* idepth, bool isInversDepth, uchar* idepthVar = nullptr);
+
+
     public:
 
         Frame(int id, int width, int height, const Eigen::Matrix3f& K, double timestamp, const unsigned char* image);

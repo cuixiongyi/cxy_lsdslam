@@ -8,7 +8,9 @@ dist_3: 0.0
 dist_4: 0.0
 
 
-
+# Frame.cpp
+IDepthVar: 0.1
+Graident_Threshold: 50
 
 
 # Debug
