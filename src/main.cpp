@@ -36,7 +36,7 @@ int main()
     std::string depth_dir = "depth";
     std::vector<std::string> rgb_files;
     std::vector<std::string> depth_files;
-    ROS_INFO_STREAM("RGB image dir : "<<(source_dir+rgb_dir));
+    ROS_INFO_STREAM("RGB mImage dir : "<<(source_dir+rgb_dir));
     if(getdir(source_dir+rgb_dir, rgb_files) <= 0)
     {
         printf("found %d rgb_files, the first one is %s\n", (int)rgb_files.size(), rgb_files[0].c_str());
@@ -65,9 +65,9 @@ int main()
     distCoeffs.at<float>(1) = dist_2;
     distCoeffs.at<float>(2) = dist_3;
     distCoeffs.at<float>(3) = dist_4;
-//    K_1.at<double>(0, 0) = fx * width;
+//    K_1.at<double>(0, 0) = fx * mWidth;
 //    K_1.at<double>(1, 1) = fy * height;
-//    K_1.at<double>(0, 2) = cx * width;
+//    K_1.at<double>(0, 2) = cx * mWidth;
 //    K_1.at<double>(1, 2) = cy * height;
     assert(imgTmp.type() == CV_8U);
 
@@ -97,7 +97,7 @@ int main()
 //        cv::imshow( "depthRaw", imgDepthRaw);
         cv::Mat imgDepth;
         ImageHelper::convertRawDepthImage(imgDepthRaw, imgDepth);
-        //ROS_INFO("Depth image at: %f %f %f", imgDepth.at<float>(50, 100), imgDepth.at<float>(100,100), imgDepth.at<float>(300,300));
+        //ROS_INFO("Depth mImage at: %f %f %f", imgDepth.at<float>(50, 100), imgDepth.at<float>(100,100), imgDepth.at<float>(300,300));
 
 //        cxy::DebugUtility::DisplayImage(imgDepth, "depthImage");
         cv::Mat imgUndistort;

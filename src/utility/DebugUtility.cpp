@@ -11,7 +11,7 @@ namespace cxy
     void DebugUtility::DisplayImage(int width, int height, int type, void* data, std::string windowName, bool keep)
     {
         /*
-             * Debug: display the image
+             * Debug: display the mImage
              */
         cv::Mat imageTest(cv::Size(width, height), type, data);
         cv::Mat imageTest2;
@@ -27,7 +27,7 @@ namespace cxy
     void DebugUtility::DisplayImage(cv::Mat image, std::string windowName, bool keep)
     {
         /*
-             * Debug: display the image
+             * Debug: display the mImage
              */
         cv::Mat imageTest2;
         image.convertTo(imageTest2, CV_8U);

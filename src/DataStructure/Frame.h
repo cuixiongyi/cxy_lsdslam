@@ -26,37 +26,28 @@ namespace cxy{
         int mFrameid = 0;
         double mTimeStamp = 0.0;
 
-        struct Data
-        {
-            using Pointer_Vector_bool = cxy::ArrayPointer_Vector<bool>;
+        using Pointer_Vector_bool = cxy::ArrayPointer_Vector<bool>;
 
-            std::vector<int> width, height;
+        //// mImage data
+        std::vector<int> mWidth, mHeight;
+        std::vector<Eigen::Matrix3f> mK, mKInv;
+        std::vector<float> mFx, mFy, mCx, mCy;
+        std::vector<float> mFxInv, mFyInv, mCxInv, mCyInv;
+        ArrayPointer_Vector<float> mImage;
+        Pointer_Vector_bool mImageValid;
+        ArrayPointer_Vector<Eigen::Vector4f> mGradient;
+        Pointer_Vector_bool mGradientValid;
+        ArrayPointer_Vector<float> mMaxGradients;
+        Pointer_Vector_bool maxGradientsValid;
+        /// std::unique_ptr<int[]> my_array(new int[5]);
+        // negative depthvalues are actually allowed, so setting this to -1 does NOT invalidate the pixel's depth.
+        // a pixel is valid iff mIdepthVar[i] > 0. Reference LSD-SLAM_core/Frame.h
+        ArrayPointer_Vector<float> mIdepth;
+        Pointer_Vector_bool mIdepthValid;
+        // MUST contain -1 for invalid pixel (that dont have depth)!!
+        ArrayPointer_Vector<float> mIdepthVar;
+        Pointer_Vector_bool mIdepthVarValid;
 
-            std::vector<Eigen::Matrix3f> K, KInv;
-            std::vector<float> fx, fy, cx, cy;
-            std::vector<float> fxInv, fyInv, cxInv, cyInv;
-
-            ArrayPointer_Vector<float> image;
-            Pointer_Vector_bool imageValid;
-
-            ArrayPointer_Vector<Eigen::Vector4f> gradient;
-            Pointer_Vector_bool gradientValid;
-
-            ArrayPointer_Vector<float> maxGradients;
-            Pointer_Vector_bool maxGradientsValid;
-
-            /// std::unique_ptr<int[]> my_array(new int[5]);
-            // negative depthvalues are actually allowed, so setting this to -1 does NOT invalidate the pixel's depth.
-            // a pixel is valid iff idepthVar[i] > 0. Reference LSD-SLAM_core/Frame.h
-            ArrayPointer_Vector<float> idepth;
-            Pointer_Vector_bool idepthValid;
-
-            // MUST contain -1 for invalid pixel (that dont have depth)!!
-            ArrayPointer_Vector<float> idepthVar;
-            Pointer_Vector_bool idepthVarValid;
-
-        };
-        Data mData;
         const int _MaxImagePyramidLevel;
 
         void buildImagePyramid(int level);
@@ -78,6 +69,18 @@ namespace cxy{
         void initialize(int id, int width, int height, const Eigen::Matrix3f& K, double timestamp, const unsigned char* image);
         void setDepth(uchar* idepth, bool isInversDepth, uchar* idepthVar = nullptr);
 
+        const int& getWidth(int level) const { return mWidth[level];}
+        const int& getHeight(int level) const { return mHeight[level];}
+        const float& getFxInv(int level) const { return mFxInv[level];}
+        const float& getFyInv(int level) const { return mFyInv[level];}
+        const float& getCxInv(int level) const { return mCxInv[level];}
+        const float& getCyInv(int level) const { return mCyInv[level];}
+
+        inline float const*const getImage(int level) const { return mImage[level].get();};
+        inline Eigen::Vector4f const*const getGradient(int level) const { return mGradient[level].get();};
+        inline float const*const getMaxGradients(int level) const { return mMaxGradients[level].get();};
+        inline float const*const getIdepth(int level) const { return mIdepth[level].get();};
+        inline float const*const getIdepthVar(int level) const { return mIdepthVar[level].get();};
 
     };
 

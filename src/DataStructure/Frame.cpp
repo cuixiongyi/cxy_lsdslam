@@ -17,8 +17,8 @@ namespace cxy
     : _MaxImagePyramidLevel(3)
     {
         initialize(id, width, height, K, timestamp, image);
-//        mData.image[0] = ArrayPointer_Allocator<float>(width*height);
-//        mData.image[0] = std::unique_ptr<float, decltype(std::free)*>(reinterpret_cast<float*>(std::malloc(width*height*sizeof(float))), std::free);
+//        mImage[0] = ArrayPointer_Allocator<float>(mWidth*height);
+//        mImage[0] = std::unique_ptr<float, decltype(std::free)*>(reinterpret_cast<float*>(std::malloc(mWidth*height*sizeof(float))), std::free);
 
 
         buildImagePyramid(_MaxImagePyramidLevel);
@@ -29,26 +29,26 @@ namespace cxy
         for (int ii = 0; ii < level; ++ii)
         {
             buildImage(ii);
-            //cxy::DebugUtility::DisplayImage(mData.width[ii], mData.height[ii], CV_32FC1, mData.image[ii].get(), "PyramidTest");
+            //cxy::DebugUtility::DisplayImage(mWidth[ii], height[ii], CV_32FC1, mImage[ii].get(), "PyramidTest");
             buildGradient(ii);
             buildMaxGradient(ii);
-            //cxy::DebugUtility::DisplayImage(mData.width[ii], mData.height[ii], CV_32FC1, mData.maxGradients[ii].get(), "MaxGradient", true);
+            //cxy::DebugUtility::DisplayImage(mWidth[ii], height[ii], CV_32FC1, mMaxGradients[ii].get(), "MaxGradient", true);
 
-            /// test gradient image
+            /// test mGradient mImage
             /*
             const float display_factor = ParameterServer::getParameter<float>("gradient_display_factor");
-            unsigned int size = mData.width[ii]*mData.height[ii];
-            auto gradient = ArrayPointer_Allocator<float>(size);
-            float* imagePointer = gradient.get();
-            Eigen::Vector4f* gradPointer = mData.gradient[ii].get();
+            unsigned int size = mWidth[ii]*height[ii];
+            auto mGradient = ArrayPointer_Allocator<float>(size);
+            float* imagePointer = mGradient.get();
+            Eigen::Vector4f* gradPointer = mGradient[ii].get();
             for (int jj = 0; jj < size; ++jj) {
                 *imagePointer = *((float*)gradPointer) * display_factor;
                 //std::cout<<*imagePointer<<std::endl;
                 imagePointer++;
                 gradPointer++;
             }
-            imagePointer = gradient.get();
-            cxy::DebugUtility::DisplayImage(mData.width[ii], mData.height[ii], CV_32FC1, imagePointer, "Gradient_Test");
+            imagePointer = mGradient.get();
+            cxy::DebugUtility::DisplayImage(mWidth[ii], height[ii], CV_32FC1, imagePointer, "Gradient_Test");
             */
         }
 
@@ -64,26 +64,26 @@ namespace cxy
     void Frame::initialize(int id, int width, int height, const Eigen::Matrix3f& K, double timestamp, const unsigned char* image)
     {
         this->mFrameid = id;
-        this->mData.width.push_back(width);
-        this->mData.height.push_back(height);
-        this->mData.K.push_back(K);
-        this->mData.fx.push_back(K(0,0));
-        this->mData.fy.push_back(K(1,1));
-        this->mData.cx.push_back(K(0,2));
-        this->mData.cy.push_back(K(1,2));
+        this->mWidth.push_back(width);
+        this->mHeight.push_back(height);
+        this->mK.push_back(K);
+        this->mFx.push_back(K(0,0));
+        this->mFy.push_back(K(1,1));
+        this->mCx.push_back(K(0,2));
+        this->mCy.push_back(K(1,2));
 
-        this->mData.KInv.push_back(K.inverse());
-        this->mData.fxInv.push_back(this->mData.KInv[0](0,0));
-        this->mData.fyInv.push_back(this->mData.KInv[0](1,1));
-        this->mData.cxInv.push_back(this->mData.KInv[0](0,2));
-        this->mData.cyInv.push_back(this->mData.KInv[0](1,2));
+        this->mKInv.push_back(K.inverse());
+        this->mFxInv.push_back(this->mKInv[0](0,0));
+        this->mFyInv.push_back(this->mKInv[0](1,1));
+        this->mCxInv.push_back(this->mKInv[0](0,2));
+        this->mCyInv.push_back(this->mKInv[0](1,2));
 
         this->mTimeStamp = timestamp;
 
 
-        mData.image.push_back(std::move(MemoryManager::ArrayPointer_Allocator<float>(width * height)));
-        float* maxPt = mData.image[0].get() + mData.width[0]*mData.height[0];
-        for(float* pt = mData.image[0].get(); pt < maxPt; pt++)
+        mImage.push_back(std::move(MemoryManager::ArrayPointer_Allocator<float>(width * height)));
+        float* maxPt = mImage[0].get() + mWidth[0]*mHeight[0];
+        for(float* pt = mImage[0].get(); pt < maxPt; pt++)
         {
             float tmp = *image;
             *pt = tmp;
@@ -91,9 +91,9 @@ namespace cxy
         }
 
         /*
-         * Debug: display the image
+         * Debug: display the mImage
          */
-        cxy::DebugUtility::DisplayImage(width, height, CV_32FC1, mData.image[0].get(), "imagePointerTest");
+        cxy::DebugUtility::DisplayImage(width, height, CV_32FC1, mImage[0].get(), "imagePointerTest");
 
     }
 
@@ -102,30 +102,30 @@ namespace cxy
         if (0 == level)
             return;
 
-        mData.width.push_back(mData.width[level-1]/2);
-        mData.height.push_back(mData.height[level-1]/2);
-        mData.fx.push_back(mData.fx[level-1] * 0.5);
-        mData.fy.push_back(mData.fy[level-1] * 0.5);
-        mData.cx.push_back((mData.cx[0] + 0.5) / ((int)1<<level) - 0.5);
-        mData.cy.push_back((mData.cy[0] + 0.5) / ((int)1<<level) - 0.5);
+        mWidth.push_back(mWidth[level-1]/2);
+        mHeight.push_back(mHeight[level-1]/2);
+        mFx.push_back(mFx[level-1] * 0.5);
+        mFy.push_back(mFy[level-1] * 0.5);
+        mCx.push_back((mCx[0] + 0.5) / ((int)1<<level) - 0.5);
+        mCy.push_back((mCy[0] + 0.5) / ((int)1<<level) - 0.5);
 
         Eigen::Matrix3f tmp;
         tmp.setZero();
-        tmp  << mData.fx[level], 0.0, mData.cx[level], 0.0, mData.fy[level], mData.cy[level], 0.0, 0.0, 1.0;	// synthetic
-        mData.K.push_back(tmp);
-        mData.KInv.push_back(tmp.inverse());
+        tmp  << mFx[level], 0.0, mCx[level], 0.0, mFy[level], mCy[level], 0.0, 0.0, 1.0;	// synthetic
+        mK.push_back(tmp);
+        mKInv.push_back(tmp.inverse());
 
-        mData.fxInv.push_back(mData.KInv[level](0,0));
-        mData.fyInv.push_back(mData.KInv[level](1,1));
-        mData.cxInv.push_back(mData.KInv[level](0,2));
-        mData.cyInv.push_back(mData.KInv[level](1,2));
+        mFxInv.push_back(mKInv[level](0,0));
+        mFyInv.push_back(mKInv[level](1,1));
+        mCxInv.push_back(mKInv[level](0,2));
+        mCyInv.push_back(mKInv[level](1,2));
 
-        int width = mData.width[level-1];
-        int height = mData.height[level-1];
+        int width = mWidth[level-1];
+        int height = mHeight[level-1];
 
-        mData.image.push_back(std::move(MemoryManager::ArrayPointer_Allocator<float>(width * height)));
-        const float* source = mData.image[level-1].get();
-        float* dest = mData.image[level].get();
+        mImage.push_back(std::move(MemoryManager::ArrayPointer_Allocator<float>(width * height)));
+        const float* source = mImage[level-1].get();
+        float* dest = mImage[level].get();
         int wh = width*height;
         const float* s;
 
@@ -145,12 +145,12 @@ namespace cxy
 
     void Frame::buildGradient(int level)
     {
-        int width = mData.width[level];
-        int height = mData.height[level];
-        const float* img_pt = mData.image[level].get() + width;
-        const float* img_pt_max = mData.image[level].get()  + width*(height-1);
-        mData.gradient.push_back(std::move(MemoryManager::ArrayPointer_Allocator<Eigen::Vector4f>(width * height)));
-        Eigen::Vector4f* gradxyii_pt = mData.gradient[level].get() + width;
+        int width = mWidth[level];
+        int height = mHeight[level];
+        const float* img_pt = mImage[level].get() + width;
+        const float* img_pt_max = mImage[level].get()  + width*(height-1);
+        mGradient.push_back(std::move(MemoryManager::ArrayPointer_Allocator<Eigen::Vector4f>(width * height)));
+        Eigen::Vector4f* gradxyii_pt = mGradient[level].get() + width;
 
         // in each iteration i need -1,0,p1,mw,pw
         float val_m1 = *(img_pt-1); /// I(x-1,y)
@@ -177,21 +177,21 @@ namespace cxy
             return;
         if (0 == level)
             return;
-        auto width = mData.width[level];
-        auto height = mData.height[level];
+        auto width = mWidth[level];
+        auto height = mHeight[level];
         auto size = width*height;
 
-        mData.idepth.push_back(std::move(MemoryManager::ArrayPointer_Allocator<float>(size)));
-        mData.idepthVar.push_back(std::move(MemoryManager::ArrayPointer_Allocator<float>(size)));
+        mIdepth.push_back(std::move(MemoryManager::ArrayPointer_Allocator<float>(size)));
+        mIdepthVar.push_back(std::move(MemoryManager::ArrayPointer_Allocator<float>(size)));
 
-        float *const idepthPointerStart = mData.idepth[level].get();
-        float *const idepthVarPointerStart = mData.idepthVar[level].get();
+        float *const idepthPointerStart = mIdepth[level].get();
+        float *const idepthVarPointerStart = mIdepthVar[level].get();
 
-        int sw = mData.width[level - 1];
+        int sw = mWidth[level - 1];
 
-        const float* idepthSourceStart = mData.idepth[level - 1].get();
+        const float* idepthSourceStart = mIdepth[level - 1].get();
         const float* idepthSource = idepthSourceStart;
-        const float* idepthVarSourceStart = mData.idepthVar[level - 1].get();
+        const float* idepthVarSourceStart = mIdepthVar[level - 1].get();
         const float* idepthVarSource = idepthVarSourceStart;
         float* idepthDest = idepthPointerStart;
         float* idepthVarDest = idepthVarPointerStart;
@@ -261,7 +261,7 @@ namespace cxy
             }
         }
 
-        DebugUtility::DisplayImage(width, height, CV_32F, mData.idepth[level].get(), "idepthPyramid");
+        DebugUtility::DisplayImage(width, height, CV_32F, mIdepth[level].get(), "idepthPyramid");
     }
 
     void Frame::setDepth(uchar* idepthInput, bool isInversDepth, uchar* idepthVarInput) {
@@ -287,14 +287,14 @@ namespace cxy
         auto idepthInput2 = reinterpret_cast<float *>(idepthInput);
         auto idepthVarInput2 = reinterpret_cast<float *>(idepthVarInput);
 //        idepthVarInput = (float*)idepthVarInput;
-        auto width = mData.width[0];
-        auto height = mData.height[0];
+        auto width = mWidth[0];
+        auto height = mHeight[0];
         auto size = width * height;
-        mData.idepth.push_back(std::move(MemoryManager::ArrayPointer_Allocator<float>(size)));
-        mData.idepthVar.push_back(std::move(MemoryManager::ArrayPointer_Allocator<float>(size)));
+        mIdepth.push_back(std::move(MemoryManager::ArrayPointer_Allocator<float>(size)));
+        mIdepthVar.push_back(std::move(MemoryManager::ArrayPointer_Allocator<float>(size)));
 
-        float *const idepthPointerStart = mData.idepth[0].get();
-        float *const idepthVarPointerStart = mData.idepthVar[0].get();
+        float *const idepthPointerStart = mIdepth[0].get();
+        float *const idepthVarPointerStart = mIdepthVar[0].get();
         float *const idepthPointerEnd = idepthPointerStart + size;
 
         float *idepthItr = idepthPointerStart;
@@ -320,7 +320,7 @@ namespace cxy
         assert(depthFunc(idepthInput2[idx1]) == idepthPointerStart[idx1]);
         assert(depthFunc(idepthInput2[idx2]) == idepthPointerStart[idx2]);
         assert(depthFunc(idepthInput2[idx3]) == idepthPointerStart[idx3]);
-        //DebugUtility::DisplayImage(width, height, CV_32F, mData.idepth[0].get(), "idepth");
+        //DebugUtility::DisplayImage(mWidth, height, CV_32F, mIdepth[0].get(), "mIdepth");
 
         isHasDepth = true;
         for (int ii = 1; ii < _MaxImagePyramidLevel; ++ii)
@@ -332,18 +332,18 @@ namespace cxy
     void Frame::buildMaxGradient(int level) {
         static float _Graident_Threshold = ParameterServer::getParameter<float>("Graident_Threshold");
 
-        const int width = mData.width[level];
-        const int height = mData.height[level];
+        const int width = mWidth[level];
+        const int height = mHeight[level];
 
-        mData.maxGradients.push_back(std::move(MemoryManager::ArrayPointer_Allocator<float>(width * height)));
-        float *const _MaxGradientPointer = mData.maxGradients[level].get();
+        mMaxGradients.push_back(std::move(MemoryManager::ArrayPointer_Allocator<float>(width * height)));
+        float *const _MaxGradientPointer = mMaxGradients[level].get();
 
         auto gradientTmpPointer = MemoryManager::ArrayPointer_Allocator<float>(width * height);
         float *const _maxGradTempPointer = gradientTmpPointer.get();
 
 
-        // 1. write abs gradients in real mData.
-        Eigen::Vector4f* gradxyii_pt = mData.gradient[level].get() + width;
+        // 1. write abs gradients in real 
+        Eigen::Vector4f* gradxyii_pt = mGradient[level].get() + width;
         float* maxgrad_pt = _MaxGradientPointer + width;
         float* maxgrad_pt_max = maxgrad_pt + width*(height-1);
 

@@ -7,7 +7,7 @@
 
 
 /**
-* Converts the given raw depth image (type CV_16UC1) to a CV_32FC1 image rescaling every pixel with the given scale
+* Converts the given raw depth mImage (type CV_16UC1) to a CV_32FC1 mImage rescaling every pixel with the given scale
 * and replacing 0 with NaNs.
 */
 void ImageHelper::convertRawDepthImage(const cv::Mat& input, cv::Mat& output, float scale)
