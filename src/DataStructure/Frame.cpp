@@ -11,11 +11,7 @@
 
 namespace cxy
 {
-    template <class T>
-        ArrayPointer<T> Frame::ArrayPointer_Allocator(unsigned int size)
-    {
-        return ArrayPointer<T>(new T[size]);
-    }
+
 
     Frame::Frame(int id, int width, int height, const Eigen::Matrix3f& K, double timestamp, const unsigned char* image)
     : _MaxImagePyramidLevel(3)
@@ -85,7 +81,7 @@ namespace cxy
         this->mTimeStamp = timestamp;
 
 
-        mData.image.push_back(std::move(ArrayPointer_Allocator<float>(width * height)));
+        mData.image.push_back(std::move(MemoryManager::ArrayPointer_Allocator<float>(width * height)));
         float* maxPt = mData.image[0].get() + mData.width[0]*mData.height[0];
         for(float* pt = mData.image[0].get(); pt < maxPt; pt++)
         {
@@ -127,7 +123,7 @@ namespace cxy
         int width = mData.width[level-1];
         int height = mData.height[level-1];
 
-        mData.image.push_back(std::move(ArrayPointer_Allocator<float>(width * height)));
+        mData.image.push_back(std::move(MemoryManager::ArrayPointer_Allocator<float>(width * height)));
         const float* source = mData.image[level-1].get();
         float* dest = mData.image[level].get();
         int wh = width*height;
@@ -153,7 +149,7 @@ namespace cxy
         int height = mData.height[level];
         const float* img_pt = mData.image[level].get() + width;
         const float* img_pt_max = mData.image[level].get()  + width*(height-1);
-        mData.gradient.push_back(std::move(ArrayPointer_Allocator<Eigen::Vector4f>(width * height)));
+        mData.gradient.push_back(std::move(MemoryManager::ArrayPointer_Allocator<Eigen::Vector4f>(width * height)));
         Eigen::Vector4f* gradxyii_pt = mData.gradient[level].get() + width;
 
         // in each iteration i need -1,0,p1,mw,pw
@@ -185,8 +181,8 @@ namespace cxy
         auto height = mData.height[level];
         auto size = width*height;
 
-        mData.idepth.push_back(std::move(ArrayPointer_Allocator<float>(size)));
-        mData.idepthVar.push_back(std::move(ArrayPointer_Allocator<float>(size)));
+        mData.idepth.push_back(std::move(MemoryManager::ArrayPointer_Allocator<float>(size)));
+        mData.idepthVar.push_back(std::move(MemoryManager::ArrayPointer_Allocator<float>(size)));
 
         float *const idepthPointerStart = mData.idepth[level].get();
         float *const idepthVarPointerStart = mData.idepthVar[level].get();
@@ -294,8 +290,8 @@ namespace cxy
         auto width = mData.width[0];
         auto height = mData.height[0];
         auto size = width * height;
-        mData.idepth.push_back(std::move(ArrayPointer_Allocator<float>(size)));
-        mData.idepthVar.push_back(std::move(ArrayPointer_Allocator<float>(size)));
+        mData.idepth.push_back(std::move(MemoryManager::ArrayPointer_Allocator<float>(size)));
+        mData.idepthVar.push_back(std::move(MemoryManager::ArrayPointer_Allocator<float>(size)));
 
         float *const idepthPointerStart = mData.idepth[0].get();
         float *const idepthVarPointerStart = mData.idepthVar[0].get();
@@ -339,10 +335,10 @@ namespace cxy
         const int width = mData.width[level];
         const int height = mData.height[level];
 
-        mData.maxGradients.push_back(std::move(ArrayPointer_Allocator<float>(width * height)));
+        mData.maxGradients.push_back(std::move(MemoryManager::ArrayPointer_Allocator<float>(width * height)));
         float *const _MaxGradientPointer = mData.maxGradients[level].get();
 
-        auto gradientTmpPointer = ArrayPointer_Allocator<float>(width * height);
+        auto gradientTmpPointer = MemoryManager::ArrayPointer_Allocator<float>(width * height);
         float *const _maxGradTempPointer = gradientTmpPointer.get();
 
 

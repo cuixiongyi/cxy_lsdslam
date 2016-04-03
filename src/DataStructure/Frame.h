@@ -8,6 +8,7 @@
 
 #include <vector>
 #include <memory>
+#include <src/utility/MemoryManager.h>
 #include "Eigen/Eigen"
 
 #include "utility/ParameterServer.h"
@@ -15,13 +16,6 @@
 
 namespace cxy{
 
-    template <class T>
-    using ArrayPointer = std::unique_ptr<T[]>;
-
-    /// vector to a unique_ptr
-    /// unique_ptr point to a trunk of memory: std::unique_ptr<int[]> my_array(new int[5]);
-    template <class T>
-    using ArrayPointer_Vector = std::vector<ArrayPointer<T> >;
 
 
     class Frame {
@@ -64,9 +58,6 @@ namespace cxy{
         };
         Data mData;
         const int _MaxImagePyramidLevel;
-
-        template <typename T>
-        ArrayPointer<T> ArrayPointer_Allocator(unsigned int size);
 
         void buildImagePyramid(int level);
         void buildImage(int level);

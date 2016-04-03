@@ -60,7 +60,9 @@ add_library(cxy_lsdslam_lib src/tracker/Tracker.cpp
                             src/utility/ImageHelper.cpp src/utility/ImageHelper.h
                             src/utility/ParameterServer.cpp src/utility/ParameterServer.h
                             src/DataStructure/Frame.cpp src/DataStructure/Frame.h
-                            src/utility/DebugUtility.cpp  src/utility/DebugUtility.h)
+                            src/utility/DebugUtility.cpp  src/utility/DebugUtility.h
+                            src/tracker/TrackFrame.cpp src/tracker/TrackFrame.h
+                            src/utility/MemoryManager.cpp src/utility/MemoryManager.h)
 
 add_executable(cxy_lsd_main src/main.cpp)
 target_link_libraries(cxy_lsd_main  cxy_lsdslam_lib
