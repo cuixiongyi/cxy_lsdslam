@@ -4,6 +4,7 @@
 #include <iostream>
 #include "ros/ros.h"
 #include <dirent.h>
+#include "yaml-cpp/yaml.h"
 #include <src/DataStructure/Frame.h>
 #include <src/utility/ImageHelper.h>
 #include "opencv2/opencv.hpp"
@@ -11,7 +12,9 @@
 #include "sophus/sophus.hpp"
 #include "Eigen/Eigen"
 #include "utility/ParameterServer.cpp"
-#include "yaml-cpp/yaml.h"
+#include "tracker/Tracker.h"
+#include "tracker/TrackRefFrame.h"
+
 //#include "cxy_lsdslam/cxy_lsdslam_param.h"
 int getdir (std::string dir, std::vector<std::string> &files);
 
@@ -90,6 +93,11 @@ int main()
     cv::waitKey(0);
     double timeStampFake = 0;
     const double timeInterval = 0.03;
+    bool isInitialized = false;
+    cxy::Tracker tracker(width, height);
+    cxy::TrackRefFrame* trackRefFramePtr = nullptr;
+    Sophus::SE3f frameToRef;
+
     for (int ii = 0; ii < rgb_files.size(); ++ii)
     {
         cv::Mat imgRaw = cv::imread(rgb_files[ii], CV_LOAD_IMAGE_GRAYSCALE);
@@ -106,7 +114,15 @@ int main()
         cv::imshow("imgUndistort", imgUndistort);
 
         cxy::Frame frame(ii, width, height, K_new_eigen, timeStampFake, imgUndistort.data );
-        frame.setDepth(imgDepth.data, false);
+        if ( ! isInitialized)
+        {
+            frame.setDepth(imgDepth.data, false);
+            trackRefFramePtr = new cxy::TrackRefFrame(&frame);
+            isInitialized = true;
+        }
+
+        tracker.track_NoDepth(trackRefFramePtr, &frame, frameToRef);
+
         cv::waitKey(0);
         timeStampFake += timeInterval;
 

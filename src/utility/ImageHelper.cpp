@@ -29,7 +29,7 @@ namespace cxy {
 
 /// interpolate the grad and color
 /// But I haven't checkout the math
-    inline Eigen::Vector3f ImageHelper::getInterpolatedElement43(const Eigen::Vector4f *const gradPtrInput,
+    Eigen::Vector3f ImageHelper::getInterpolatedElement43(const Eigen::Vector4f *const gradPtrInput,
                                                                  const float x, const float y, const int width) {
         /* Only the first 3 element is used, probabily for effeciency
         * [0] is dx

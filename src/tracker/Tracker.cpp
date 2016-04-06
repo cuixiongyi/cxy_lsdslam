@@ -40,13 +40,13 @@ cxy::Tracker::Tracker(const int& width, const int& height)
 
 int cxy::Tracker::track_NoDepth(const cxy::TrackRefFrame *const refFrameInput,
                                 const cxy::Frame *const newFrameInput,
-                                const Sophus::SE3f &initPose)
+                                const Sophus::SE3f &frameToRefInput)
 {
 
     mRefTrackFrame = refFrameInput;
     mNewTrackFrame = newFrameInput;
 
-    Sophus::SE3f refToFramePose = initPose.inverse();
+    Sophus::SE3f refToFramePose = frameToRefInput.inverse();
 
     //// loop over levels
  for (int ll = 0; ll < MAX_PYRAMID_LEVEL - 1; ++ll)
@@ -54,14 +54,27 @@ int cxy::Tracker::track_NoDepth(const cxy::TrackRefFrame *const refFrameInput,
      const auto width = newFrameInput->getWidth(ll);
      const auto height = newFrameInput->getHeight(ll);
      const auto size = width*height;
+     //// init mBuf_isPixelGood
      for (int ii = 0; ii < size; ++ii)
          mBuf_isPixelGood[ii] = false;
+     affineEstimation_a = 1; affineEstimation_b = 0;
+     float lastResidual = 0.f;
+
+
+
      getResidual_Buffer(ll,
                         refFrameInput,
                         newFrameInput,
                         refFrameInput->getPoint3D(ll),
                         refFrameInput->getPointColor_Var(ll),
                         refToFramePose);
+     if(useAffineLightningEstimation)
+     {
+         affineEstimation_a = affineEstimation_a_lastIt;
+         affineEstimation_b = affineEstimation_b_lastIt;
+     }
+
+     float lastErr = getWeight_Residual(referenceToFrame);
 
 
 
@@ -211,6 +224,35 @@ float cxy::Tracker::getResidual_Buffer(const int& level,
 
 
 }
+
+float cxy::Tracker::getWeight_Residual(const Sophus::SE3f &refToFrame) {
+    const auto &tVec = refToFrame.translation();
+    float tx = tVec[0];
+    float ty = tVec[1];
+    float tz = tVec[2];
+
+    float sumRes = 0;
+
+    /// pointer
+    auto warpXPtr = getMBuf_warped_x();
+    auto warpYPtr = getMBuf_warped_y();
+    auto warpZPtr = getMBuf_warped_z();
+    auto depthPtr = getMBuf_d();
+    auto warpResiPtr = getMBuf_warped_residual();
+    auto warpDxPtr = getMBuf_warped_dx();
+    auto warpDyPtr = getMBuf_warped_dy();
+    auto idepthVarPtr = getMBuf_idepthVar();
+
+    for (int ii = 0; ii < buf_warped_size; ++ii, ++warpXPtr, ++warpYPtr,
+            ++warpZPtr, ++depthPtr, ++warpResiPtr, ++warpDxPtr, ++warpDyPtr, ++idepthVarPtr)
+    {
+
+    }
+
+    return 0;
+}
+
+
 
 
 

@@ -15,15 +15,11 @@ namespace cxy
     public:
         Tracker(const int& width, const int& height);
 
-    private:
         int track_NoDepth(TrackRefFrame const*const refTrackFrameInput,
                             Frame const*const newFrameInput,
                             const Sophus::SE3f& initPose);
         int track_WithDepth();
 
-    private:
-        TrackRefFrame const* mRefTrackFrame = nullptr;
-        Frame const* mNewTrackFrame = nullptr;
 
 
         float getResidual_Buffer(const int& level,
@@ -34,8 +30,9 @@ namespace cxy
                                    Sophus::SE3f &poseInput
         );
 
-
-
+    private:
+        TrackRefFrame const* mRefTrackFrame = nullptr;
+        Frame const* mNewTrackFrame = nullptr;
 
         float pointUsage;
         float lastGoodCount;
@@ -55,6 +52,7 @@ namespace cxy
         /// constant parameter
         float Max_Pixel_Diff_Accept_Throush;
         float Max_Diff_Grad_Multi;
+        bool useAffineLightningEstimation = false;
 
     private:
 
@@ -121,8 +119,7 @@ namespace cxy
         inline bool* getMBuf_isPixelGood()  {return mBuf_isPixelGood.get();}
 
 
-
-
+        float getWeight_Residual(const Sophus::SE3f &refToFrame);
     };
 
 
