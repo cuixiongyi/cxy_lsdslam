@@ -76,11 +76,16 @@ namespace cxy{
         const float& getCxInv(int level) const { return mCxInv[level];}
         const float& getCyInv(int level) const { return mCyInv[level];}
 
-        inline float const*const getImage(int level) const { return mImage[level].get();};
-        inline Eigen::Vector4f const*const getGradient(int level) const { return mGradient[level].get();};
-        inline float const*const getMaxGradients(int level) const { return mMaxGradients[level].get();};
-        inline float const*const getIdepth(int level) const { return mIdepth[level].get();};
-        inline float const*const getIdepthVar(int level) const { return mIdepthVar[level].get();};
+        const float& getFx(int level) const { return mFx[level];}
+        const float& getFy(int level) const { return mFy[level];}
+        const float& getCx(int level) const { return mCx[level];}
+        const float& getCy(int level) const { return mCy[level];}
+
+        inline float const* getImage(int level) const { return mImage[level].get();};
+        inline Eigen::Vector4f const* getGradient(int level) const { return mGradient[level].get();};
+        inline float const* getMaxGradients(int level) const { return mMaxGradients[level].get();};
+        inline float const* getIdepth(int level) const { return mIdepth[level].get();};
+        inline float const* getIdepthVar(int level) const { return mIdepthVar[level].get();};
 
     };
 

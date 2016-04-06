@@ -8,13 +8,14 @@
 #include <rosconsole/macros_generated.h>
 #include <ros/ros.h>
 #include "Frame.h"
+#include "utility/MacroUtility.h"
 
 namespace cxy
 {
 
 
     Frame::Frame(int id, int width, int height, const Eigen::Matrix3f& K, double timestamp, const unsigned char* image)
-    : _MaxImagePyramidLevel(3)
+    : _MaxImagePyramidLevel(MAX_PYRAMID_LEVEL )
     {
         initialize(id, width, height, K, timestamp, image);
 //        mImage[0] = ArrayPointer_Allocator<float>(mWidth*height);

@@ -15,5 +15,9 @@ Graident_Threshold: 50
 MaxImagePyramidLevel: 3
 
 
+# Tracker
+Max_Pixel_Diff_Accept_Throush: 800
+Max_Diff_Grad_Multi:   0.25
+
 # Debug
 gradient_display_factor: 200

@@ -96,7 +96,7 @@ int main()
         cv::Mat imgDepthRaw = cv::imread(depth_files[ii], -1);
 //        cv::imshow( "depthRaw", imgDepthRaw);
         cv::Mat imgDepth;
-        ImageHelper::convertRawDepthImage(imgDepthRaw, imgDepth);
+        cxy::ImageHelper::convertRawDepthImage(imgDepthRaw, imgDepth);
         //ROS_INFO("Depth mImage at: %f %f %f", imgDepth.at<float>(50, 100), imgDepth.at<float>(100,100), imgDepth.at<float>(300,300));
 
 //        cxy::DebugUtility::DisplayImage(imgDepth, "depthImage");
