@@ -21,6 +21,15 @@ Const_Huber_D: 0.5
 # Tracker
 Const_Max_Pixel_Diff_Accept_Throush: 800
 Const_Max_Diff_Grad_Multi:   0.25
+LambdaInitialLevel:
+          - 1
+          - 1
+          - 1
+IterationNumLevel:
+          - 10
+          - 10
+          - 10
+
 
 # Debug
 gradient_display_factor: 200

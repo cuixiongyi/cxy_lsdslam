@@ -127,6 +127,7 @@ namespace cxy
 
         inline bool* getMBuf_isPixelGood()  {return mBuf_isPixelGood.get();}
 
+        void getJacobian_Update(NormalEquationLeastSquare& ls);
     };
 
 

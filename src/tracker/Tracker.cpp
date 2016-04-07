@@ -3,6 +3,7 @@
 //
 
 #include <src/utility/ImageHelper.h>
+#include <src/Optimization/NormalEquationLeastSquare.h>
 #include "src/tracker/Tracker.h"
 
 namespace cxy
@@ -23,7 +24,7 @@ cxy::Tracker::Tracker(const int& width, const int& height)
     Const_ImageColorVariance = ParameterServer::getParameter<float>("Const_ImageColorVariance");
     Const_Huber_D = ParameterServer::getParameter<float>("Const_Huber_D");
     auto lambdaInitialLevelConfig = ParameterServer::getParameterNode("LambdaInitialLevel");
-    auto IterationNumConfig = ParameterServer::getParameterNode("LambdaInitialLevel");
+    auto IterationNumConfig = ParameterServer::getParameterNode("IterationNumLevel");
     for (int ii = 0; ii < lambdaInitialLevelConfig.size(); ++ii)
     {
         Const_LambdaInitialLevel.push_back(lambdaInitialLevelConfig[ii].as<float>());
@@ -92,7 +93,7 @@ int cxy::Tracker::track_NoDepth(const cxy::TrackRefFrame *const refFrameInput,
 
      for(int iteration=0; iteration < Const_IterationNumLevel[ll]; iteration++)
      {
-
+        getJacobian_Update();
 
 
      }
@@ -301,6 +302,59 @@ float cxy::Tracker::getWeight_Residual(const Sophus::SE3f &refToFrame) {
 
     return sumRes / buf_warped_size;
 }
+
+void cxy::Tracker::getJacobian_Update(NormalEquationLeastSquare& ls)
+{
+    /// pointer
+    auto warpXPtr = getMBuf_warped_x();
+    auto warpYPtr = getMBuf_warped_y();
+    auto warpZPtr = getMBuf_warped_z();
+    auto depthPtr = getMBuf_d();
+    auto warpResiPtr = getMBuf_warped_residual();
+    auto warpDxPtr = getMBuf_warped_dx();
+    auto warpDyPtr = getMBuf_warped_dy();
+    auto idepthVarPtr = getMBuf_idepthVar();
+    auto weightP_Ptr = getMBuf_weight_p();
+
+    ls.initialize(width*height);
+    for(int i=0;i<buf_warped_size;i++)
+    {
+        float px = *(buf_warped_x+i);
+        float py = *(buf_warped_y+i);
+        float pz = *(buf_warped_z+i);
+        float r =  *(buf_warped_residual+i);
+        float gx = *(buf_warped_dx+i);
+        float gy = *(buf_warped_dy+i);
+        // step 3 + step 5 comp 6d error vector
+
+        float z = 1.0f / pz;
+        float z_sqr = 1.0f / (pz*pz);
+        Vector6 v;
+        v[0] = z*gx + 0;
+        v[1] = 0 +         z*gy;
+        v[2] = (-px * z_sqr) * gx +
+               (-py * z_sqr) * gy;
+        v[3] = (-px * py * z_sqr) * gx +
+               (-(1.0 + py * py * z_sqr)) * gy;
+        v[4] = (1.0 + px * px * z_sqr) * gx +
+               (px * py * z_sqr) * gy;
+        v[5] = (-py * z) * gx +
+               (px * z) * gy;
+
+        // step 6: integrate into A and b:
+        ls.update(v, r, *(buf_weight_p+i));
+    }
+    Vector6 result;
+
+    // solve ls
+    ls.finish();
+    ls.solve(result);
+
+    return result;
+
+}
+
+
 
 
 
