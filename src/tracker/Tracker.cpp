@@ -17,8 +17,20 @@ cxy::Tracker::Tracker(const int& width, const int& height)
 {
 
     // load Parameters
-    Max_Pixel_Diff_Accept_Throush = ParameterServer::getParameter<float>("Max_Pixel_Diff_Accept_Throush");
-    Max_Diff_Grad_Multi = ParameterServer::getParameter<float>("Max_Diff_Grad_Multi");
+    Const_Max_Pixel_Diff_Accept_Throush = ParameterServer::getParameter<float>("Const_Max_Pixel_Diff_Accept_Throush");
+    Const_Max_Diff_Grad_Multi = ParameterServer::getParameter<float>("Const_Max_Diff_Grad_Multi");
+    Const_IDepthVarianceWeight  = ParameterServer::getParameter<float>("Const_IDepthVarianceWeight");
+    Const_ImageColorVariance = ParameterServer::getParameter<float>("Const_ImageColorVariance");
+    Const_Huber_D = ParameterServer::getParameter<float>("Const_Huber_D");
+    auto lambdaInitialLevelConfig = ParameterServer::getParameterNode("LambdaInitialLevel");
+    auto IterationNumConfig = ParameterServer::getParameterNode("LambdaInitialLevel");
+    for (int ii = 0; ii < lambdaInitialLevelConfig.size(); ++ii)
+    {
+        Const_LambdaInitialLevel.push_back(lambdaInitialLevelConfig[ii].as<float>());
+        Const_IterationNumLevel.push_back(IterationNumConfig[ii].as<int>());
+    }
+    assert(Const_LambdaInitialLevel.size() == MAX_PYRAMID_LEVEL);
+
     const auto size = width*height;
 
     mBuf_warped_residual = MemoryManager::ArrayPointer_Allocator<float>(size);
@@ -68,13 +80,23 @@ int cxy::Tracker::track_NoDepth(const cxy::TrackRefFrame *const refFrameInput,
                         refFrameInput->getPoint3D(ll),
                         refFrameInput->getPointColor_Var(ll),
                         refToFramePose);
-     if(useAffineLightningEstimation)
+     if(Const_UseAffineLightningEstimation)
      {
          affineEstimation_a = affineEstimation_a_lastIt;
          affineEstimation_b = affineEstimation_b_lastIt;
      }
 
-     float lastErr = getWeight_Residual(referenceToFrame);
+     float lastErr = getWeight_Residual(refToFramePose);
+
+     float LM_lambda = Const_LambdaInitialLevel[ll];
+
+     for(int iteration=0; iteration < Const_IterationNumLevel[ll]; iteration++)
+     {
+
+
+
+     }
+
 
 
 
@@ -156,7 +178,7 @@ float cxy::Tracker::getResidual_Buffer(const int& level,
         sy += c2*weight;
         sw += weight;
 
-        bool isGood = residual*residual / (Max_Pixel_Diff_Accept_Throush + Max_Diff_Grad_Multi*(resInterp[0]*resInterp[0] + resInterp[1]*resInterp[1])) < 1;
+        bool isGood = residual*residual / (Const_Max_Pixel_Diff_Accept_Throush + Const_Max_Diff_Grad_Multi*(resInterp[0]*resInterp[0] + resInterp[1]*resInterp[1])) < 1;
         *(isGoodPtr) = isGood;
 
         *(getMBuf_warped_x()+idx) = projectedPoint(0);
@@ -242,15 +264,46 @@ float cxy::Tracker::getWeight_Residual(const Sophus::SE3f &refToFrame) {
     auto warpDxPtr = getMBuf_warped_dx();
     auto warpDyPtr = getMBuf_warped_dy();
     auto idepthVarPtr = getMBuf_idepthVar();
+    auto weightP_Ptr = getMBuf_weight_p();
 
     for (int ii = 0; ii < buf_warped_size; ++ii, ++warpXPtr, ++warpYPtr,
-            ++warpZPtr, ++depthPtr, ++warpResiPtr, ++warpDxPtr, ++warpDyPtr, ++idepthVarPtr)
+            ++warpZPtr, ++depthPtr, ++warpResiPtr, ++warpDxPtr, ++warpDyPtr, ++idepthVarPtr, ++weightP_Ptr)
     {
 
+        float px = *(warpXPtr);	// x'
+        float py = *(warpYPtr);	// y'
+        float pz = *(warpZPtr);	// z'
+        float d = *(depthPtr);	// d
+        float rp = *(warpResiPtr); // r_p
+        float gx = *(warpDxPtr);	// \delta_x ii
+        float gy = *(warpDyPtr);  // \delta_y I
+        float s = Const_IDepthVarianceWeight* *(idepthVarPtr);	// \sigma_d^2
+
+
+        // calc dw/dd (first 2 components):
+        float g0 = (tx * pz - tz * px) / (pz*pz*d);
+        float g1 = (ty * pz - tz * py) / (pz*pz*d);
+
+
+        // calc w_p
+        float drpdd = gx * g0 + gy * g1;	// ommitting the minus
+        float w_p = 1.0f / ((Const_ImageColorVariance) + s * drpdd * drpdd);
+
+        float weighted_rp = fabs(rp*sqrtf(w_p));
+
+        float wh = fabs(weighted_rp < (Const_Huber_D/2) ? 1 : (Const_Huber_D/2) / weighted_rp);
+
+        sumRes += wh * w_p * rp*rp;
+
+
+        *(weightP_Ptr) = wh * w_p;
     }
 
-    return 0;
+    return sumRes / buf_warped_size;
 }
+
+
+
 
 
 

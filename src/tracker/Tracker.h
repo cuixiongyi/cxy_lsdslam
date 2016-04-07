@@ -30,6 +30,8 @@ namespace cxy
                                    Sophus::SE3f &poseInput
         );
 
+        float getWeight_Residual(const Sophus::SE3f &refToFrame);
+
     private:
         TrackRefFrame const* mRefTrackFrame = nullptr;
         Frame const* mNewTrackFrame = nullptr;
@@ -50,9 +52,16 @@ namespace cxy
         bool trackingWasGood;
 
         /// constant parameter
-        float Max_Pixel_Diff_Accept_Throush;
-        float Max_Diff_Grad_Multi;
-        bool useAffineLightningEstimation = false;
+        float Const_Max_Pixel_Diff_Accept_Throush;
+        float Const_Max_Diff_Grad_Multi;
+        bool Const_UseAffineLightningEstimation = false;
+        float Const_ImageColorVariance;
+        float Const_IDepthVarianceWeight;
+        float Const_Huber_D;
+        std::vector<float> Const_LambdaInitialLevel;
+        std::vector<int> Const_IterationNumLevel;
+
+
 
     private:
 
@@ -118,8 +127,6 @@ namespace cxy
 
         inline bool* getMBuf_isPixelGood()  {return mBuf_isPixelGood.get();}
 
-
-        float getWeight_Residual(const Sophus::SE3f &refToFrame);
     };
 
 

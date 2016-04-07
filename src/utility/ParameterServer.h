@@ -22,6 +22,9 @@ namespace cxy{
 
         template <typename T>
         static T getParameter(const std::string &paraName);
+
+        static YAML::Node getParameterNode(const std::string &paraName);
+
     };
 }
 

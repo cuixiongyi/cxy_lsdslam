@@ -13,11 +13,14 @@ dist_4: 0.0
 IDepthVar: 0.1
 Graident_Threshold: 50
 MaxImagePyramidLevel: 3
+Const_IDepthVarianceWeight: 1
+Const_ImageColorVariance: 5
+Const_Huber_D: 0.5
 
 
 # Tracker
-Max_Pixel_Diff_Accept_Throush: 800
-Max_Diff_Grad_Multi:   0.25
+Const_Max_Pixel_Diff_Accept_Throush: 800
+Const_Max_Diff_Grad_Multi:   0.25
 
 # Debug
 gradient_display_factor: 200

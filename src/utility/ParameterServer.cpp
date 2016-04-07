@@ -24,5 +24,11 @@ namespace cxy{
     {
         return getInstance()->mConfig[paraName].as<T>();
     }
+
+    YAML::Node ParameterServer::getParameterNode(const std::string &paraName)
+    {
+        return getInstance()->mConfig[paraName];
+    }
+
 }
 
