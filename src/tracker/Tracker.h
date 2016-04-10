@@ -7,6 +7,8 @@
 
 #include "TrackRefFrame.h"
 #include "sophus/se3.hpp"
+#include "Optimization/NormalEquationLeastSquare.h"
+#include "DataStructure/DataTypeDeclearation.h"
 
 namespace cxy
 {
@@ -15,8 +17,8 @@ namespace cxy
     public:
         Tracker(const int& width, const int& height);
 
-        int track_NoDepth(TrackRefFrame const*const refTrackFrameInput,
-                            Frame const*const newFrameInput,
+        SE3 track_NoDepth(TrackRefFrame const*const refTrackFrameInput,
+                            Frame *const newFrameInput,
                             const Sophus::SE3f& initPose);
         int track_WithDepth();
 
@@ -32,9 +34,11 @@ namespace cxy
 
         float getWeight_Residual(const Sophus::SE3f &refToFrame);
 
+        Vector6f getJacobian_Update(NormalEquationLeastSquare& ls);
+
     private:
         TrackRefFrame const* mRefTrackFrame = nullptr;
-        Frame const* mNewTrackFrame = nullptr;
+        Frame * mNewTrackFrame = nullptr;
 
         float pointUsage;
         float lastGoodCount;
@@ -60,6 +64,11 @@ namespace cxy
         float Const_Huber_D;
         std::vector<float> Const_LambdaInitialLevel;
         std::vector<int> Const_IterationNumLevel;
+        std::vector<float> Const_ConvergenceEps;
+        float Const_LambdaSuccessFac;
+        std::vector<float> Const_StepSizeMin;
+        float Const_LambdaFailFactor;
+
 
 
 
@@ -82,7 +91,7 @@ namespace cxy
         ArrayPointer<float>   mBuf_weight_p;
         ArrayPointer<bool>    mBuf_isPixelGood;
 
-        int buf_warped_size;
+        unsigned int buf_warped_size;
 
     public:
         inline const float* getMBuf_warped_residual() const {return mBuf_warped_residual.get();}
@@ -127,7 +136,6 @@ namespace cxy
 
         inline bool* getMBuf_isPixelGood()  {return mBuf_isPixelGood.get();}
 
-        void getJacobian_Update(NormalEquationLeastSquare& ls);
     };
 
 

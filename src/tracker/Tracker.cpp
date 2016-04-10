@@ -9,7 +9,6 @@
 namespace cxy
 {
 
-}
 
 
 
@@ -23,12 +22,19 @@ cxy::Tracker::Tracker(const int& width, const int& height)
     Const_IDepthVarianceWeight  = ParameterServer::getParameter<float>("Const_IDepthVarianceWeight");
     Const_ImageColorVariance = ParameterServer::getParameter<float>("Const_ImageColorVariance");
     Const_Huber_D = ParameterServer::getParameter<float>("Const_Huber_D");
+    Const_LambdaSuccessFac = ParameterServer::getParameter<float>("LambdaSuccessFac");
+    Const_LambdaFailFactor = ParameterServer::getParameter<float>("LambdaFailFactor");
+
     auto lambdaInitialLevelConfig = ParameterServer::getParameterNode("LambdaInitialLevel");
     auto IterationNumConfig = ParameterServer::getParameterNode("IterationNumLevel");
+    auto convergenceEpsConfig = ParameterServer::getParameterNode("ConvergenceEps");
+    auto stepSizeMinConfig = ParameterServer::getParameterNode("StepSizeMin");
     for (int ii = 0; ii < lambdaInitialLevelConfig.size(); ++ii)
     {
         Const_LambdaInitialLevel.push_back(lambdaInitialLevelConfig[ii].as<float>());
         Const_IterationNumLevel.push_back(IterationNumConfig[ii].as<int>());
+        Const_ConvergenceEps.push_back(convergenceEpsConfig[ii].as<float>());
+        Const_StepSizeMin.push_back(stepSizeMinConfig[ii].as<float>());
     }
     assert(Const_LambdaInitialLevel.size() == MAX_PYRAMID_LEVEL);
 
@@ -51,8 +57,8 @@ cxy::Tracker::Tracker(const int& width, const int& height)
 
 
 
-int cxy::Tracker::track_NoDepth(const cxy::TrackRefFrame *const refFrameInput,
-                                const cxy::Frame *const newFrameInput,
+    SE3  cxy::Tracker::track_NoDepth(const cxy::TrackRefFrame *const refFrameInput,
+                                cxy::Frame *const newFrameInput,
                                 const Sophus::SE3f &frameToRefInput)
 {
 
@@ -60,6 +66,8 @@ int cxy::Tracker::track_NoDepth(const cxy::TrackRefFrame *const refFrameInput,
     mNewTrackFrame = newFrameInput;
 
     Sophus::SE3f refToFramePose = frameToRefInput.inverse();
+    NormalEquationLeastSquare ls;
+    float lastIterResidual = 0.f;
 
     //// loop over levels
  for (int ll = 0; ll < MAX_PYRAMID_LEVEL - 1; ++ll)
@@ -71,7 +79,6 @@ int cxy::Tracker::track_NoDepth(const cxy::TrackRefFrame *const refFrameInput,
      for (int ii = 0; ii < size; ++ii)
          mBuf_isPixelGood[ii] = false;
      affineEstimation_a = 1; affineEstimation_b = 0;
-     float lastResidual = 0.f;
 
 
 
@@ -93,22 +100,137 @@ int cxy::Tracker::track_NoDepth(const cxy::TrackRefFrame *const refFrameInput,
 
      for(int iteration=0; iteration < Const_IterationNumLevel[ll]; iteration++)
      {
-        getJacobian_Update();
+//        getJacobian_Update();
+         getJacobian_Update(ls);
+         unsigned int incTry=0;
+
+         while(true)
+         {
+             // solve LS system with current lambda
+             Vector6f b = -ls.b;
+             Matrix66f A = ls.A;
+             ls.setLambda(LM_lambda);
+             Vector6f inc = A.ldlt().solve(b);
+             ++incTry;
 
 
-     }
+             // apply increment. pretty sure this way round is correct, but hard to test.
+             Sophus::SE3f newReferenceToFrame = Sophus::SE3f::exp((inc)) * refToFramePose;
+             //Sophus::SE3f new_referenceToFrame = referenceToFrame * Sophus::SE3f::exp((inc));
+
+             getResidual_Buffer(ll,
+                                refFrameInput,
+                                newFrameInput,
+                                refFrameInput->getPoint3D(ll),
+                                refFrameInput->getPointColor_Var(ll),
+                                newReferenceToFrame);
+             /*
+             if(buf_warped_size < MIN_GOODPERALL_PIXEL_ABSMIN* (width>>lvl)*(height>>lvl))
+             {
+                 diverged = true;
+                 trackingWasGood = false;
+                 return SE3();
+             }
+             */
+
+             float error = getWeight_Residual(newReferenceToFrame);
+
+             // accept inc?
+             if(error < lastErr)
+             {
+                 incTry++;
+                 // accept inc
+                 refToFramePose = newReferenceToFrame;
+//             if(useAffineLightningEstimation)
+                 if (0)
+                 {
+                     affineEstimation_a = affineEstimation_a_lastIt;
+                     affineEstimation_b = affineEstimation_b_lastIt;
+                 }
+
+/*
+             if(enablePrintDebugInfo && printTrackingIterationInfo)
+             {
+                 // debug output
+                 printf("(%d-%d): ACCEPTED increment of %f with lambda %.1f, residual: %f -> %f\n",
+                        lvl,iteration, sqrt(inc.dot(inc)), LM_lambda, lastErr, error);
+
+                 printf("         p=%.4f %.4f %.4f %.4f %.4f %.4f\n",
+                        referenceToFrame.log()[0],referenceToFrame.log()[1],referenceToFrame.log()[2],
+                        referenceToFrame.log()[3],referenceToFrame.log()[4],referenceToFrame.log()[5]);
+             }
+*/
+                 // converged?
+                 if(error / lastErr > Const_ConvergenceEps[ll])
+                 {
+//                 if(enablePrintDebugInfo && printTrackingIterationInfo)
+                     {
+                         printf("(%d-%d): FINISHED pyramid level (last residual reduction too small).\n",
+                                ll,iteration);
+                     }
+                     iteration = Const_IterationNumLevel[ll];
+                 }
+
+                 lastIterResidual = lastErr = error;
 
 
+                 if(LM_lambda <= 0.2)
+                     LM_lambda = 0;
+                 else
+                     LM_lambda *= Const_LambdaSuccessFac;
+
+                 break;
+             }
+             else
+             {
+                 /*
+                 if(enablePrintDebugInfo && printTrackingIterationInfo)
+                 {
+                     printf("(%d-%d): REJECTED increment of %f with lambda %.1f, (residual: %f -> %f)\n",
+                            lvl,iteration, sqrt(inc.dot(inc)), LM_lambda, lastErr, error);
+                 }
+                 */
+
+                 if(!(inc.dot(inc) > Const_StepSizeMin[ll]))
+                 {
+
+//                 if(enablePrintDebugInfo && printTrackingIterationInfo)
+                     {
+                         printf("(%d-%d): FINISHED pyramid level (stepsize too small).\n",
+                                ll,iteration);
+                     }
+                     iteration = Const_IterationNumLevel[ll];
+                     break;
+                 }
+
+                 if(LM_lambda == 0)
+                     LM_lambda = 0.2;
+                 else
+                     LM_lambda *= std::pow(Const_LambdaFailFactor, incTry);
+             }
+
+         }
+
+     } /// Iteration
+
+ }// pyramid
 
 
+    lastResidual = lastIterResidual;
 
+    /*
+    trackingWasGood = !diverged
+                      && lastGoodCount / (frame->width(SE3TRACKING_MIN_LEVEL)*frame->height(SE3TRACKING_MIN_LEVEL)) > MIN_GOODPERALL_PIXEL
+                      && lastGoodCount / (lastGoodCount + lastBadCount) > MIN_GOODPERGOODBAD_PIXEL;
+    if(trackingWasGood)
+        reference->keyframe->numFramesTrackedOnThis++;
+*/
 
-
-
-
- }
-
- return 0;
+    newFrameInput->mInitialTrackedResidual = lastResidual / pointUsage;
+    newFrameInput->pose->thisToParent_raw = ImageHelper::sim3FromSE3(refToFramePose.inverse().cast<float>(),1);
+    newFrameInput->pose->trackingParent = refFrameInput->getFrame()->pose.get();
+    return refToFramePose.inverse();
+// return 0;
 }
 
 /// project the ref 3D point into the new Frame
@@ -303,7 +425,7 @@ float cxy::Tracker::getWeight_Residual(const Sophus::SE3f &refToFrame) {
     return sumRes / buf_warped_size;
 }
 
-void cxy::Tracker::getJacobian_Update(NormalEquationLeastSquare& ls)
+cxy::Vector6f cxy::Tracker::getJacobian_Update(NormalEquationLeastSquare& ls)
 {
     /// pointer
     auto warpXPtr = getMBuf_warped_x();
@@ -315,21 +437,20 @@ void cxy::Tracker::getJacobian_Update(NormalEquationLeastSquare& ls)
     auto warpDyPtr = getMBuf_warped_dy();
     auto idepthVarPtr = getMBuf_idepthVar();
     auto weightP_Ptr = getMBuf_weight_p();
-
-    ls.initialize(width*height);
+    ls.initialize(buf_warped_size);
     for(int i=0;i<buf_warped_size;i++)
     {
-        float px = *(buf_warped_x+i);
-        float py = *(buf_warped_y+i);
-        float pz = *(buf_warped_z+i);
-        float r =  *(buf_warped_residual+i);
-        float gx = *(buf_warped_dx+i);
-        float gy = *(buf_warped_dy+i);
+        float px = *(warpXPtr+i);
+        float py = *(warpYPtr+i);
+        float pz = *(warpZPtr+i);
+        float r =  *(warpResiPtr+i);
+        float gx = *(warpDxPtr+i);
+        float gy = *(warpDyPtr+i);
         // step 3 + step 5 comp 6d error vector
 
         float z = 1.0f / pz;
         float z_sqr = 1.0f / (pz*pz);
-        Vector6 v;
+        Vector6f v;
         v[0] = z*gx + 0;
         v[1] = 0 +         z*gy;
         v[2] = (-px * z_sqr) * gx +
@@ -342,23 +463,21 @@ void cxy::Tracker::getJacobian_Update(NormalEquationLeastSquare& ls)
                (px * z) * gy;
 
         // step 6: integrate into A and b:
-        ls.update(v, r, *(buf_weight_p+i));
+        ls.update(v, r, *(weightP_Ptr+i));
     }
-    Vector6 result;
+    Vector6f result;
 
     // solve ls
     ls.finish();
     ls.solve(result);
 
     return result;
-
 }
 
 
 
 
-
-
+}
 
 
 

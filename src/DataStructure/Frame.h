@@ -8,11 +8,13 @@
 
 #include <vector>
 #include <memory>
-#include <src/utility/MemoryManager.h>
 #include "Eigen/Eigen"
 
+#include <src/utility/MemoryManager.h>
+#include "DataStructure/DataTypeDeclearation.h"
 #include "utility/ParameterServer.h"
 #include "utility/DebugUtility.h"
+#include "FramePoseStruct.h"
 
 namespace cxy{
 
@@ -20,9 +22,9 @@ namespace cxy{
 
     class Frame {
 
-    private:
 
-        /// in seconds
+    private:
+/// in seconds
         int mFrameid = 0;
         double mTimeStamp = 0.0;
 
@@ -61,6 +63,10 @@ namespace cxy{
 
         void convertRawDepthImage(const cv::Mat& input, cv::Mat& output, float scale);
 
+    public:
+        float mInitialTrackedResidual = 0.f;
+        std::unique_ptr<FramePoseStruct> pose;
+
 
     public:
 
@@ -87,6 +93,18 @@ namespace cxy{
         inline float const* getIdepth(int level) const { return mIdepth[level].get();};
         inline float const* getIdepthVar(int level) const { return mIdepthVar[level].get();};
 
+
+
+
+
+
+
+
+
+    public:
+        inline int getFrameid() const {return mFrameid;}
+
+        inline double getTimeStamp() const {return mTimeStamp;}
     };
 
 }

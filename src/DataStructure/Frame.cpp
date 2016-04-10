@@ -23,6 +23,7 @@ namespace cxy
 
 
         buildImagePyramid(_MaxImagePyramidLevel);
+        pose = std::move(std::unique_ptr<FramePoseStruct>(new FramePoseStruct(this)));
 
     }
     void Frame::buildImagePyramid(int level)

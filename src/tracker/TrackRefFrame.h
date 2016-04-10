@@ -30,6 +30,8 @@ namespace cxy
 
         inline const unsigned int& getNumData(int level) const { return numData[level];}
     private:
+
+    private:
         Frame const*const mFrame;
 
         ///3DData
@@ -43,6 +45,10 @@ namespace cxy
 
         ArrayPointer_Vector<unsigned int> pointPosInXYGrid;	// x + y*mWidth
         std::vector<unsigned int> numData;
+
+
+        public:
+        inline const Frame *const getFrame() const {return mFrame;}
 
     };
 

@@ -8,6 +8,8 @@
 
 #include <opencv2/core/core.hpp>
 #include <Eigen/Eigen>
+#include <DataStructure/DataTypeDeclearation.h>
+
 namespace cxy
 {
     class ImageHelper {
@@ -23,6 +25,13 @@ namespace cxy
 
         static Eigen::Vector3f getInterpolatedElement43(const Eigen::Vector4f *const gradPtrInput, const float x,
                                                         const float y, const int width);
+
+        static inline Sim3 sim3FromSE3(const SE3& se3, double scale)
+        {
+            Sim3 result(se3.unit_quaternion(), se3.translation());
+            result.setScale(scale);
+            return result;
+        }
 
 
     };

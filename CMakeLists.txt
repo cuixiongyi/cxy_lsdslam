@@ -61,8 +61,11 @@ add_library(cxy_lsdslam_lib src/tracker/Tracker.cpp
                             src/utility/ParameterServer.cpp src/utility/ParameterServer.h
                             src/DataStructure/Frame.cpp src/DataStructure/Frame.h
                             src/utility/DebugUtility.cpp  src/utility/DebugUtility.h
-        src/tracker/TrackRefFrame.cpp src/tracker/TrackRefFrame.h
-                            src/utility/MemoryManager.cpp src/utility/MemoryManager.h src/utility/MacroUtility.h src/Optimization/NormalEquationLeastSquare.cpp src/Optimization/NormalEquationLeastSquare.h src/Optimization/OptimizedSelfAdjointMatrix66f.cpp src/Optimization/OptimizedSelfAdjointMatrix66f.h)
+                            src/tracker/TrackRefFrame.cpp src/tracker/TrackRefFrame.h
+                            src/utility/MemoryManager.cpp src/utility/MemoryManager.h src/utility/MacroUtility.h
+                            src/Optimization/NormalEquationLeastSquare.cpp src/Optimization/NormalEquationLeastSquare.h
+                            src/Optimization/OptimizedSelfAdjointMatrix66f.cpp src/Optimization/OptimizedSelfAdjointMatrix66f.h
+        src/DataStructure/DataTypeDeclearation.h src/DataStructure/FramePoseStruct.cpp src/DataStructure/FramePoseStruct.h)
 
 add_executable(cxy_lsd_main src/main.cpp)
 target_link_libraries(cxy_lsd_main  cxy_lsdslam_lib
