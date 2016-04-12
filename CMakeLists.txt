@@ -15,7 +15,8 @@ find_package(catkin REQUIRED COMPONENTS roscpp
                                         tf)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 find_package(Eigen3)
-find_package(OpenCV 3.1.0 REQUIRED)
+#find_package(OpenCV 3.1.0 REQUIRED)
+find_package(OpenCV REQUIRED)
 set(Yaml_Cpp_LIB_DIR /usr/local/lib )
 set(Yaml_Cpp_INCLUDE_DIR /usr/local/include )
 

@@ -6,7 +6,7 @@
 #define CXY_LSDSLAM_DEBUGUTILITY_H
 
 
-#include <opencv2/core/hal/interface.h>
+//#include <opencv2/core/hal/interface.h>
 #include "opencv2/opencv.hpp"
 #include <Eigen/Eigen>
 #include <ros/ros.h>
