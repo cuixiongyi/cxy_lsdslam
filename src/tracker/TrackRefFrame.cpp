@@ -8,7 +8,6 @@ cxy::TrackRefFrame::TrackRefFrame(const cxy::Frame *const refFrameInput)
 : mFrame(refFrameInput)
 {
     for (int ii = 0; ii < MAX_PYRAMID_LEVEL; ++ii) {
-        numData.push_back(0);
         makePointCloud(ii);
     }
 
@@ -50,7 +49,10 @@ void cxy::TrackRefFrame::makePointCloud(int level) {
 
             if(idepthVarSourcePtr[idx] <= 0 || idepthSourcePtr[idx] == 0) continue;
 
-            *point3DPtr = (1.0f / idepthSourcePtr[idx]) * Eigen::Vector3f(fxInv*x+cxInv,fyInv*y+cyInv,1);
+            auto tmpDepth = (1.0f / idepthSourcePtr[idx]);
+            auto tmpPoint3d = Eigen::Vector3f(fxInv*x+cxInv,fyInv*y+cyInv,1);
+            auto tmp2 =  tmpDepth * tmpPoint3d;
+            *point3DPtr = tmp2;
             *gradDataPT = gradSourcePtr[idx].head<2>();
             *colorAndVarDataPT = Eigen::Vector2f(colorSourcePtr[idx], idepthVarSourcePtr[idx]);
             *pointIdxPtr = idx;

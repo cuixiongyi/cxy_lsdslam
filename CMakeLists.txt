@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS roscpp
                                         dynamic_reconfigure
                                         visualization_msgs
                                         sensor_msgs
+                                        pcl_conversions pcl_ros
                                         tf)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 find_package(Eigen3)

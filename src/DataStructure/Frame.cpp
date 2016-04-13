@@ -2,7 +2,7 @@
 // Created by xiongyi on 3/28/16.
 //
 
-#include <opencv2/core/mat.hpp>
+#include <opencv2/opencv.hpp>
 #include <highgui.h>
 #include <iostream>
 #include <rosconsole/macros_generated.h>

@@ -135,6 +135,7 @@ cxy::Tracker::Tracker(const int& width, const int& height)
 
              float error = getWeight_Residual(newReferenceToFrame);
 
+             ROS_INFO("          lambda: %f     error: %f", LM_lambda, error);
              // accept inc?
              if(error < lastErr)
              {
@@ -209,8 +210,9 @@ cxy::Tracker::Tracker(const int& width, const int& height)
                      LM_lambda *= std::pow(Const_LambdaFailFactor, incTry);
              }
 
-         }
 
+         }
+         ROS_INFO("    iteration: %d      lambda: %f     error: %f", iteration, LM_lambda, lastErr);
      } /// Iteration
 
  }// pyramid
