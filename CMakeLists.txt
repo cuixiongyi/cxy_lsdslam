@@ -16,8 +16,8 @@ find_package(catkin REQUIRED COMPONENTS roscpp
                                         tf)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 find_package(Eigen3)
-#find_package(OpenCV 3.1.0 REQUIRED)
-find_package(OpenCV REQUIRED)
+find_package(OpenCV 3.1.0 REQUIRED)
+#find_package(OpenCV REQUIRED)
 set(Yaml_Cpp_LIB_DIR /usr/local/lib )
 set(Yaml_Cpp_INCLUDE_DIR /usr/local/include )
 
@@ -67,7 +67,9 @@ add_library(cxy_lsdslam_lib src/tracker/Tracker.cpp
                             src/utility/MemoryManager.cpp src/utility/MemoryManager.h src/utility/MacroUtility.h
                             src/Optimization/NormalEquationLeastSquare.cpp src/Optimization/NormalEquationLeastSquare.h
                             src/Optimization/OptimizedSelfAdjointMatrix66f.cpp src/Optimization/OptimizedSelfAdjointMatrix66f.h
-        src/DataStructure/DataTypeDeclearation.h src/DataStructure/FramePoseStruct.cpp src/DataStructure/FramePoseStruct.h)
+        src/DataStructure/DataTypeDeclearation.h src/DataStructure/FramePoseStruct.cpp src/DataStructure/FramePoseStruct.h src/utility/easylogging++.h src/utility/LogUtility.cpp src/utility/LogUtility.h)
+
+target_link_libraries(cxy_lsdslam_lib ${catkin_LIBRARIES} /usr/local/lib/libyaml-cpp.so ${OpenCV_LIBS})
 
 add_executable(cxy_lsd_main src/main.cpp)
 target_link_libraries(cxy_lsd_main  cxy_lsdslam_lib

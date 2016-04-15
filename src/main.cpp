@@ -14,6 +14,8 @@
 #include "utility/ParameterServer.cpp"
 #include "tracker/Tracker.h"
 #include "tracker/TrackRefFrame.h"
+#include "utility/easylogging++.h"
+INITIALIZE_EASYLOGGINGPP
 
 //#include "cxy_lsdslam/cxy_lsdslam_param.h"
 int getdir (std::string dir, std::vector<std::string> &files);
@@ -21,6 +23,8 @@ int getdir (std::string dir, std::vector<std::string> &files);
 int main()
 {
 
+    el::Configurations conf("/home/xiongyi/workspace/src/cxy-LSD-SLAM/cfg/LoggerConfig.conf");
+    el::Loggers::reconfigureAllLoggers( conf );
 
     const float fx = cxy::ParameterServer::getParameter<float>("fx");
     const float fy = cxy::ParameterServer::getParameter<float>("fy");
@@ -121,7 +125,7 @@ int main()
             isInitialized = true;
         }
 
-        tracker.track_NoDepth(trackRefFramePtr, &frame, frameToRef);
+            tracker.track_NoDepth(trackRefFramePtr, &frame, frameToRef);
 
         cv::waitKey(0);
         timeStampFake += timeInterval;

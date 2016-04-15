@@ -15,6 +15,7 @@
 #include "utility/ParameterServer.h"
 #include "utility/DebugUtility.h"
 #include "FramePoseStruct.h"
+#include "utility/LogUtility.h"
 
 namespace cxy{
 

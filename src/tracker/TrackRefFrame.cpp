@@ -8,6 +8,7 @@ cxy::TrackRefFrame::TrackRefFrame(const cxy::Frame *const refFrameInput)
 : mFrame(refFrameInput)
 {
     for (int ii = 0; ii < MAX_PYRAMID_LEVEL; ++ii) {
+        numData.push_back(0);
         makePointCloud(ii);
     }
 
@@ -63,7 +64,9 @@ void cxy::TrackRefFrame::makePointCloud(int level) {
             pointIdxPtr++;
         }
 
-    numData.push_back(point3DPtr-getPoint3D(level));
+    numData[level] = (point3DPtr-getPoint3D(level));
+    DebugUtility::PublishPointCloud(getPoint3D(level), numData[level], "make_pointcloud");
+
 }
 
 

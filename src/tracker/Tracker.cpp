@@ -70,7 +70,7 @@ cxy::Tracker::Tracker(const int& width, const int& height)
     float lastIterResidual = 0.f;
 
     //// loop over levels
- for (int ll = 0; ll < MAX_PYRAMID_LEVEL - 1; ++ll)
+ for (int ll = MAX_PYRAMID_LEVEL - 1; ll >= 0; ++ll)
  {
      const auto width = newFrameInput->getWidth(ll);
      const auto height = newFrameInput->getHeight(ll);
@@ -356,6 +356,7 @@ float cxy::Tracker::getResidual_Buffer(const int& level,
 
 
     buf_warped_size = idx;
+//    DebugUtility::PublishPointCloud()
 
     pointUsage = usageCount / (float)size;
     lastGoodCount = goodCount;

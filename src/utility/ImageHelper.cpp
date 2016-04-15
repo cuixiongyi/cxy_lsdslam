@@ -19,10 +19,13 @@ namespace cxy {
             auto &inputeVal = *input_ptr;
             if (inputeVal == 0) {
                 *output_ptr = std::numeric_limits<float>::quiet_NaN();
+                *output_ptr = 0;
             }
             else {
                 *output_ptr = (float) inputeVal * scale;
             }
+//            std::cout<< *output_ptr<<std::endl;
+
         }
     }
 

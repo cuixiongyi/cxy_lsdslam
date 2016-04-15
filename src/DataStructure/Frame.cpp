@@ -31,7 +31,7 @@ namespace cxy
         for (int ii = 0; ii < level; ++ii)
         {
             buildImage(ii);
-            //cxy::DebugUtility::DisplayImage(mWidth[ii], height[ii], CV_32FC1, mImage[ii].get(), "PyramidTest");
+//            cxy::DebugUtility::DisplayImage(mWidth[ii], mHeight[ii], CV_32FC1, mImage[ii].get(), "PyramidTest");
             buildGradient(ii);
             buildMaxGradient(ii);
             //cxy::DebugUtility::DisplayImage(mWidth[ii], height[ii], CV_32FC1, mMaxGradients[ii].get(), "MaxGradient", true);
@@ -95,7 +95,7 @@ namespace cxy
         /*
          * Debug: display the mImage
          */
-        cxy::DebugUtility::DisplayImage(width, height, CV_32FC1, mImage[0].get(), "imagePointerTest");
+        //cxy::DebugUtility::DisplayImage(width, height, CV_32FC1, mImage[0].get(), "imagePointerTest");
 
     }
 
@@ -186,23 +186,18 @@ namespace cxy
         mIdepth.push_back(std::move(MemoryManager::ArrayPointer_Allocator<float>(size)));
         mIdepthVar.push_back(std::move(MemoryManager::ArrayPointer_Allocator<float>(size)));
 
-        float *const idepthPointerStart = mIdepth[level].get();
-        float *const idepthVarPointerStart = mIdepthVar[level].get();
+        int sourceWidth = mWidth[level - 1];
 
-        int sw = mWidth[level - 1];
-
-        const float* idepthSourceStart = mIdepth[level - 1].get();
-        const float* idepthSource = idepthSourceStart;
-        const float* idepthVarSourceStart = mIdepthVar[level - 1].get();
-        const float* idepthVarSource = idepthVarSourceStart;
-        float* idepthDest = idepthPointerStart;
-        float* idepthVarDest = idepthVarPointerStart;
+        const float* idepthSource = mIdepth[level - 1].get();
+        const float* idepthVarSource = mIdepthVar[level - 1].get();
+        float* idepthDest = mIdepth[level].get();
+        float* idepthVarDest = mIdepthVar[level].get();
 
         for(int y=0;y<height;y++)
         {
             for(int x=0;x<width;x++)
             {
-                int idx = 2*(x+y*sw);
+                int idx = 2*(x+y*sourceWidth);
                 int idxDest = (x+y*width);
 
                 float idepthSumsSum = 0;
@@ -229,21 +224,21 @@ namespace cxy
                     num++;
                 }
 
-                var = idepthVarSource[idx+sw];
+                var = idepthVarSource[idx+sourceWidth];
                 if(var > 0)
                 {
                     ivar = 1.0f / var;
                     ivarSumsSum += ivar;
-                    idepthSumsSum += ivar * idepthSource[idx+sw];
+                    idepthSumsSum += ivar * idepthSource[idx+sourceWidth];
                     num++;
                 }
 
-                var = idepthVarSource[idx+sw+1];
+                var = idepthVarSource[idx+sourceWidth+1];
                 if(var > 0)
                 {
                     ivar = 1.0f / var;
                     ivarSumsSum += ivar;
-                    idepthSumsSum += ivar * idepthSource[idx+sw+1];
+                    idepthSumsSum += ivar * idepthSource[idx+sourceWidth+1];
                     num++;
                 }
 
@@ -301,12 +296,17 @@ namespace cxy
 
         float *idepthItr = idepthPointerStart;
         float *idepthVarItr = idepthVarPointerStart;
-        for (; idepthItr < idepthPointerEnd;)
+        for (int ii = 0; idepthItr < idepthPointerEnd; ++ii)
         {
             /// assuming the input depth is metric
             *idepthItr = depthFunc(*idepthInput2);
             /// if depth is nan set the var to -1
             *idepthVarItr = std::isnan(*idepthItr) ? -1 : depthVarFunc(*idepthVarInput2);
+            if (std::isnan(*idepthItr))
+            {
+                *idepthItr = 1;
+//                std::cout<<ii<<std::endl;
+            }
             ++idepthItr;
             ++idepthInput2;
             ++idepthVarItr;
@@ -314,16 +314,17 @@ namespace cxy
         }
         ROS_INFO("Frame::setDepth: \nDepth vs IDepth");
 
-        int idx1 = 100*width + 100;
-        int idx2 = 200*width + 200;
-        int idx3 = 400*width + 300;
+        int idx1 = 120*width + 105;
+        int idx2 = 230*width + 205;
+        int idx3 = 430*width + 305;
         idepthInput2 = reinterpret_cast<float *>(idepthInput);
         ROS_INFO("%f %f \n%f %f \n %f %f\n", idepthInput2[idx1], idepthPointerStart[idx1], idepthInput2[idx2], idepthPointerStart[idx2], idepthInput2[idx3], idepthPointerStart[idx3] );
         assert(depthFunc(idepthInput2[idx1]) == idepthPointerStart[idx1]);
         assert(depthFunc(idepthInput2[idx2]) == idepthPointerStart[idx2]);
         assert(depthFunc(idepthInput2[idx3]) == idepthPointerStart[idx3]);
-        //DebugUtility::DisplayImage(mWidth, height, CV_32F, mIdepth[0].get(), "mIdepth");
-
+//        DebugUtility::DisplayImage(width, height, CV_32F, mIdepth[0].get(), "mIdepth", true, true);
+        DebugUtility::DisplayImage(width, height, CV_32FC1, idepthInput2, "mIdepth", true, false);
+        LogUtility::writeMatToLog(width, height, CV_32FC1, idepthInput2, "depth input");
         isHasDepth = true;
         for (int ii = 1; ii < _MaxImagePyramidLevel; ++ii)
         {
