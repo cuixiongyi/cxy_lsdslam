@@ -104,6 +104,7 @@ int main(int argc, char** argv)
     cxy::TrackRefFrame* trackRefFramePtr = nullptr;
     Sophus::SE3f frameToRef;
 
+    cv::Mat imageTrackRef;
     for (int ii = 0; ii < rgb_files.size(); ++ii)
     {
         cv::Mat imgRaw = cv::imread(rgb_files[ii], CV_LOAD_IMAGE_GRAYSCALE);
@@ -117,7 +118,6 @@ int main(int argc, char** argv)
         cv::Mat imgUndistort;
         cv::remap(imgRaw, imgUndistort, map1, map2, cv::INTER_LINEAR);
 
-        cv::imshow("imgUndistort", imgUndistort);
 
         cxy::Frame frame(ii, width, height, K_new_eigen, timeStampFake, imgUndistort.data );
         if ( ! isInitialized)
@@ -125,11 +125,14 @@ int main(int argc, char** argv)
             frame.setDepth(imgDepth.data, false);
             trackRefFramePtr = new cxy::TrackRefFrame(&frame);
             isInitialized = true;
+            imageTrackRef = imgUndistort;
+            continue;
         }
-
-            tracker.track_NoDepth(trackRefFramePtr, &frame, frameToRef);
-
+        cv::imshow("imgUndistort", imgUndistort);
+        cv::imshow("ImageTrackReference", imageTrackRef);
         cv::waitKey(0);
+        tracker.track_NoDepth(trackRefFramePtr, &frame, frameToRef);
+
         timeStampFake += timeInterval;
 
     }

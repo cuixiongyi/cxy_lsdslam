@@ -68,7 +68,7 @@ namespace cxy
         imageTest.convertTo(imageTest2, CV_8UC1);
         if (log)
         {
-            LogUtility::writeMatToLog(imageTest, "depth input");
+            LogUtility::writeMatToLog(imageTest, windowName+"_log");
         }
 
 //        cv::convertScaleAbs(imageTest, imageTest2);

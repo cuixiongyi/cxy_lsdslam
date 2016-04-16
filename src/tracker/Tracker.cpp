@@ -316,7 +316,7 @@ float cxy::Tracker::getResidual_Buffer(const int& level,
 
         *(getMBuf_d()+idx) = 1.0f / (*point3DPtr)[2];
         *(getMBuf_idepthVar()+idx) = (*refColorVarPtr)[1];
-
+        ++idx;
 
         if(isGood)
         {
