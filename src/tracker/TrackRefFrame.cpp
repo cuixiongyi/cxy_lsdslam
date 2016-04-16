@@ -65,7 +65,7 @@ void cxy::TrackRefFrame::makePointCloud(int level) {
         }
 
     numData[level] = (point3DPtr-getPoint3D(level));
-    DebugUtility::PublishPointCloud(getPoint3D(level), numData[level], "make_pointcloud");
+//    DebugUtility::PublishPointCloud(getPoint3D(level), numData[level], "make_pointcloud");
 
 }
 

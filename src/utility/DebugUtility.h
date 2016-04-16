@@ -17,13 +17,15 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include "pcl_conversions/pcl_conversions.h"
+#include "utility/LogUtility.h"
 //#include <pcl_conversions>
+#include "utility/MemoryManager.h"
 namespace cxy
 {
     class DebugUtility {
 
     public:
-        static void DisplayImage(int width, int height, int type,  void* data, std::string windowName, bool keep = false, bool normalize = false);
+        static void DisplayImage(int width, int height, int type,  void* data, std::string windowName, bool keep = false, bool normalize = false, bool log = false);
         static void DisplayImage(cv::Mat image, std::string windowName, bool keep = false);
 
         static void PublishPointCloud(Eigen::Vector3f const *pointInput, unsigned int size, const std::string& pointcloudName);
@@ -61,7 +63,7 @@ namespace cxy
         public:
             static ros::NodeHandle& getHandel()
             {
-                return getInstance()->getHandel();
+                return getInstance()->nh;
             }
         };
     };

@@ -258,7 +258,7 @@ namespace cxy
             }
         }
 
-        DebugUtility::DisplayImage(width, height, CV_32F, mIdepth[level].get(), "idepthPyramid");
+        DebugUtility::DisplayImage(width, height, CV_32F, mIdepth[level].get(), "idepthPyramid", true, true);
     }
 
     void Frame::setDepth(uchar* idepthInput, bool isInversDepth, uchar* idepthVarInput) {
@@ -302,11 +302,11 @@ namespace cxy
             *idepthItr = depthFunc(*idepthInput2);
             /// if depth is nan set the var to -1
             *idepthVarItr = std::isnan(*idepthItr) ? -1 : depthVarFunc(*idepthVarInput2);
-            if (std::isnan(*idepthItr))
-            {
-                *idepthItr = 1;
-//                std::cout<<ii<<std::endl;
-            }
+//            if (std::isinf(*idepthItr))
+//            {
+//                *idepthItr = 1;
+////                std::cout<<ii<<std::endl;
+//            }
             ++idepthItr;
             ++idepthInput2;
             ++idepthVarItr;
@@ -323,8 +323,8 @@ namespace cxy
         assert(depthFunc(idepthInput2[idx2]) == idepthPointerStart[idx2]);
         assert(depthFunc(idepthInput2[idx3]) == idepthPointerStart[idx3]);
 //        DebugUtility::DisplayImage(width, height, CV_32F, mIdepth[0].get(), "mIdepth", true, true);
-        DebugUtility::DisplayImage(width, height, CV_32FC1, idepthInput2, "mIdepth", true, false);
-        LogUtility::writeMatToLog(width, height, CV_32FC1, idepthInput2, "depth input");
+        DebugUtility::DisplayImage(width, height, CV_32FC1, idepthPointerStart, "mIdepth", true, true, true);
+        LogUtility::writeMatToLog(width, height, CV_32FC1, idepthPointerStart, "depth input");
         isHasDepth = true;
         for (int ii = 1; ii < _MaxImagePyramidLevel; ++ii)
         {

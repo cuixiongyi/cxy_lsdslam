@@ -14,29 +14,63 @@ namespace cxy
     DebugUtility::DebugUtilityHandle* DebugUtility::DebugUtilityHandle::instance = nullptr;
 
 
-    void DebugUtility::DisplayImage(int width, int height, int type, void* data, std::string windowName, bool keep, bool normalize)
+    void DebugUtility::DisplayImage(int width, int height, int type, void* data, std::string windowName, bool keep, bool normalize, bool log)
     {
         /*
              * Debug: display the mImage
              */
+
+        ArrayPointer<float> dataPtrUnique = MemoryManager::ArrayPointer_Allocator<float>(width*height);
+        auto tmpPtr = (float*)data;
+        auto dataPtr = dataPtrUnique.get();
+        unsigned int size = width*height;
+        for (int ii = 0; ii < size; ++ii)
+        {
+            dataPtr[ii] = tmpPtr[ii];
+        }
         if (normalize && CV_32F == type)
         {
-            float maximum = -10.0;
-            float minimum = 999;
-            auto dataPtr = (float*)data;
-            auto minmaxRet = std::minmax_element(dataPtr, dataPtr+width*height);
-            minimum = *minmaxRet.first;
-            maximum = *minmaxRet.second;
+//            LogUtility::writeMatToLog(width, height, CV_32FC1, dataPtrUnique.get(), "depth before normalize");
+
+            float maximum = *std::max_element(dataPtr, dataPtr+size, [](const float& a, const float& b) -> bool {
+                if (std::isinf(a) || std::isnan(a))
+                    return true;
+                if (std::isinf(b) || std::isnan(b))
+                    return false;
+                return a < b;
+            });
+            float minimum = *std::min_element(dataPtr, dataPtr+size, [](const float& a, const float& b) -> bool {
+                if (std::isinf(a) || std::isnan(a))
+                    return false;
+                if (std::isinf(b) || std::isnan(b))
+                    return true;
+                return a < b;
+            });
             ROS_INFO("maximum in depth: %f", maximum);
-            for (int ii = 0; ii < width*height; ++ii)
+            for (int ii = 0; ii < size; ++ii)
             {
                 dataPtr[ii] = (dataPtr[ii] - minimum) / (maximum - minimum) * 255;
             }
 
+//            LogUtility::writeMatToLog(width, height, CV_32FC1, dataPtr, "depth after normalize");
+
+
         }
-        cv::Mat imageTest(cv::Size(width, height), type, data);
+
+        cv::Mat imageTest(cv::Size(width, height), type, dataPtr);
         cv::Mat imageTest2;
+//        if (normalize)
+//        {
+//            cv::convertScaleAbs(imageTest, imageTest2);
+//            imageTest2.copyTo(imageTest);
+//        }
+
         imageTest.convertTo(imageTest2, CV_8UC1);
+        if (log)
+        {
+            LogUtility::writeMatToLog(imageTest, "depth input");
+        }
+
 //        cv::convertScaleAbs(imageTest, imageTest2);
         cv::imshow(windowName, imageTest2);
         cv::waitKey(0);

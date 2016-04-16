@@ -9,13 +9,18 @@
 #include <string>
 #include "easylogging++.h"
 
-class LogUtility {
 
-public:
-    static void writeMatToLog(const cv::Mat& image, const std::string& name );
-    static void writeMatToLog(int width, int height, int type, void* data, const std::string& name );
+namespace cxy
+{
+    class LogUtility {
 
-};
+    public:
+        static void writeMatToLog(const cv::Mat& image, const std::string& name );
+        static void writeMatToLog(int width, int height, int type, void* data, const std::string& name );
+
+    };
+
+}
 
 
 #endif //CXY_LSDSLAM_LOGUTILITY_H

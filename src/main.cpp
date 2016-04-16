@@ -20,9 +20,11 @@ INITIALIZE_EASYLOGGINGPP
 //#include "cxy_lsdslam/cxy_lsdslam_param.h"
 int getdir (std::string dir, std::vector<std::string> &files);
 
-int main()
+int main(int argc, char** argv)
 {
 
+
+    ros::init(argc, argv, "cxy_lsdslam");
     el::Configurations conf("/home/xiongyi/workspace/src/cxy-LSD-SLAM/cfg/LoggerConfig.conf");
     el::Loggers::reconfigureAllLoggers( conf );
 
