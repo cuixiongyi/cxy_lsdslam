@@ -115,7 +115,8 @@ cxy::Tracker::Tracker(const int& width, const int& height)
 
 
              // apply increment. pretty sure this way round is correct, but hard to test.
-             Sophus::SE3f newReferenceToFrame = Sophus::SE3f::exp((inc)) * refToFramePose;
+             auto incExp = Sophus::SE3f::exp((inc));
+             Sophus::SE3f newReferenceToFrame = incExp * refToFramePose;
              //Sophus::SE3f new_referenceToFrame = referenceToFrame * Sophus::SE3f::exp((inc));
 
              getResidual_Buffer(ll,

@@ -58,7 +58,8 @@ catkin_package(
 #add_dependencies( ${PROJECT_NAME}_gencfg)
 
 #link_directories(/opt/)
-add_library(cxy_lsdslam_lib src/tracker/Tracker.cpp
+add_library(cxy_lsdslam_lib src/tracker/Tracker.cpp src/tracker/Tracker.h
+                            src/DataStructure/Frame.cpp src/DataStructure/Frame.h
                             src/utility/ImageHelper.cpp src/utility/ImageHelper.h
                             src/utility/ParameterServer.cpp src/utility/ParameterServer.h
                             src/DataStructure/Frame.cpp src/DataStructure/Frame.h
@@ -67,11 +68,16 @@ add_library(cxy_lsdslam_lib src/tracker/Tracker.cpp
                             src/utility/MemoryManager.cpp src/utility/MemoryManager.h src/utility/MacroUtility.h
                             src/Optimization/NormalEquationLeastSquare.cpp src/Optimization/NormalEquationLeastSquare.h
                             src/Optimization/OptimizedSelfAdjointMatrix66f.cpp src/Optimization/OptimizedSelfAdjointMatrix66f.h
-        src/DataStructure/DataTypeDeclearation.h src/DataStructure/FramePoseStruct.cpp src/DataStructure/FramePoseStruct.h src/utility/easylogging++.h src/utility/LogUtility.cpp src/utility/LogUtility.h)
+                            src/DataStructure/DataTypeDeclearation.h
+                            src/DataStructure/FramePoseStruct.cpp src/DataStructure/FramePoseStruct.h
+                            src/utility/easylogging++.h
+                            src/utility/LogUtility.h src/utility/LogUtility.cpp
+
+        )
 
 target_link_libraries(cxy_lsdslam_lib ${catkin_LIBRARIES} /usr/local/lib/libyaml-cpp.so ${OpenCV_LIBS})
 
 add_executable(cxy_lsd_main src/main.cpp)
 target_link_libraries(cxy_lsd_main  cxy_lsdslam_lib
-                            ${catkin_LIBRARIES} /usr/local/lib/libyaml-cpp.so ${OpenCV_LIBS})
+                            ${catkin_LIBRARIES} /usr/local/lib/libyaml-cpp.so.0.5.3 ${OpenCV_LIBS})
 
