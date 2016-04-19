@@ -9,6 +9,7 @@
 #include "sophus/se3.hpp"
 #include "Optimization/NormalEquationLeastSquare.h"
 #include "DataStructure/DataTypeDeclearation.h"
+#include "utility/easylogging++.h"
 
 namespace cxy
 {

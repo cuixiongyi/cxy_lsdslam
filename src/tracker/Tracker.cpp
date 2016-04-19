@@ -70,7 +70,8 @@ cxy::Tracker::Tracker(const int& width, const int& height)
     float lastIterResidual = 0.f;
 
     //// loop over levels
- for (int ll = MAX_PYRAMID_LEVEL - 1; ll >= 0; ++ll)
+    LOG(INFO)<< "Start track";
+ for (int ll = MAX_PYRAMID_LEVEL - 1; ll >= 0; --ll)
  {
      const auto width = newFrameInput->getWidth(ll);
      const auto height = newFrameInput->getHeight(ll);
@@ -94,7 +95,9 @@ cxy::Tracker::Tracker(const int& width, const int& height)
          affineEstimation_b = affineEstimation_b_lastIt;
      }
 
+
      float lastErr = getWeight_Residual(refToFramePose);
+     LOG(INFO)<< "lastErr: "<<lastErr <<" at level "<<ll;
 
      float LM_lambda = Const_LambdaInitialLevel[ll];
 
@@ -116,6 +119,7 @@ cxy::Tracker::Tracker(const int& width, const int& height)
 
              // apply increment. pretty sure this way round is correct, but hard to test.
              auto incExp = Sophus::SE3f::exp((inc));
+
              Sophus::SE3f newReferenceToFrame = incExp * refToFramePose;
              //Sophus::SE3f new_referenceToFrame = referenceToFrame * Sophus::SE3f::exp((inc));
 
@@ -135,8 +139,9 @@ cxy::Tracker::Tracker(const int& width, const int& height)
              */
 
              float error = getWeight_Residual(newReferenceToFrame);
+             LOG(INFO)<< "error at iteration "<<iteration<< " : "<<lastErr<<" with lambda "<<LM_lambda;
 
-             ROS_INFO("          lambda: %f     error: %f", LM_lambda, error);
+//             ROS_INFO("          lambda: %f     error: %f", LM_lambda, error);
              // accept inc?
              if(error < lastErr)
              {
@@ -202,6 +207,7 @@ cxy::Tracker::Tracker(const int& width, const int& height)
                                 ll,iteration);
                      }
                      iteration = Const_IterationNumLevel[ll];
+                     LOG(INFO)<< "break iteration "<< iteration<<" at level "<<ll;
                      break;
                  }
 
@@ -213,7 +219,8 @@ cxy::Tracker::Tracker(const int& width, const int& height)
 
 
          }
-         ROS_INFO("    iteration: %d      lambda: %f     error: %f", iteration, LM_lambda, lastErr);
+         LOG(INFO)<< "break level "<< ll <<" with error:        "<<lastErr;
+
      } /// Iteration
 
  }// pyramid
@@ -245,6 +252,8 @@ float cxy::Tracker::getResidual_Buffer(const int& level,
                                       Sophus::SE3f &poseInput
                                       )
 {
+    LOG(INFO)<< "Start getResidual_Buffer";
+
     const auto width = newFrameInput->getWidth(level);
     const auto height = newFrameInput->getHeight(level);
     const auto fx = newFrameInput->getFx(level);
@@ -375,6 +384,8 @@ float cxy::Tracker::getResidual_Buffer(const int& level,
 }
 
 float cxy::Tracker::getWeight_Residual(const Sophus::SE3f &refToFrame) {
+    LOG(INFO)<< "Start getWeight_Residual";
+
     const auto &tVec = refToFrame.translation();
     float tx = tVec[0];
     float ty = tVec[1];
@@ -431,6 +442,8 @@ float cxy::Tracker::getWeight_Residual(const Sophus::SE3f &refToFrame) {
 
 cxy::Vector6f cxy::Tracker::getJacobian_Update(NormalEquationLeastSquare& ls)
 {
+    LOG(INFO)<< "Start getJacobian_Update";
+
     /// pointer
     auto warpXPtr = getMBuf_warped_x();
     auto warpYPtr = getMBuf_warped_y();

@@ -15,13 +15,13 @@ find_package(catkin REQUIRED COMPONENTS roscpp
                                         pcl_conversions pcl_ros
                                         tf)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
-find_package(Eigen3)
+find_package(Eigen3 REQUIRED)
 #find_package(OpenCV 3.1.0 REQUIRED)
 find_package(OpenCV REQUIRED)
+find_package(YAML-CPP REQUIRED)
 set(Yaml_Cpp_LIB_DIR /usr/local/lib )
 set(Yaml_Cpp_INCLUDE_DIR /usr/local/include )
 
-include_directories(${Yaml_Cpp_INCLUDE_DIR} )
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${EIGEN3_INCLUDE_DIR} )
 include(/usr/share/OpenCV/OpenCVConfig.cmake)
@@ -75,9 +75,9 @@ add_library(cxy_lsdslam_lib src/tracker/Tracker.cpp src/tracker/Tracker.h
 
         )
 
-target_link_libraries(cxy_lsdslam_lib ${catkin_LIBRARIES} /usr/local/lib/libyaml-cpp.so ${OpenCV_LIBS})
+target_link_libraries(cxy_lsdslam_lib ${catkin_LIBRARIES} ${YAML_CPP_LIBRARIES} ${OpenCV_LIBS})
 
 add_executable(cxy_lsd_main src/main.cpp)
-target_link_libraries(cxy_lsd_main  cxy_lsdslam_lib
-                            ${catkin_LIBRARIES} /usr/local/lib/libyaml-cpp.so.0.5.3 ${OpenCV_LIBS})
+target_link_libraries(cxy_lsd_main  cxy_lsdslam_lib ${YAML_CPP_LIBRARY}
+                            ${catkin_LIBRARIES}  ${OpenCV_LIBS})
 

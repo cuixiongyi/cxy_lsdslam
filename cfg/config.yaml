@@ -10,35 +10,35 @@ dist_4: 0.0
 
 
 # Frame.cpp
-IDepthVar: 0.1
+IDepthVar: 1
 Graident_Threshold: 50
 MaxImagePyramidLevel: 3
-Const_IDepthVarianceWeight: 1
-Const_ImageColorVariance: 5
-Const_Huber_D: 0.5
 
 
 # Tracker
+Const_IDepthVarianceWeight: 1
+Const_ImageColorVariance: 5
+Const_Huber_D: 3
 Const_Max_Pixel_Diff_Accept_Throush: 800
 Const_Max_Diff_Grad_Multi:   0.25
-LambdaSuccessFac: 1.0
+LambdaSuccessFac: 0.5
+LambdaFailFactor: 2.0
 LambdaInitialLevel:
-          - 1
-          - 1
-          - 1
+          - 0
+          - 0
+          - 0
 IterationNumLevel:
-          - 30
-          - 30
-          - 30
+          - 10
+          - 25
+          - 50
 ConvergenceEps:
-          - 0.01
-          - 0.01
-          - 0.01
+          - 0.999
+          - 0.999
+          - 0.999
 StepSizeMin:
-          - 0.1
-          - 0.1
-          - 0.1
-LambdaFailFactor: 0.5
+          - 0.0000001
+          - 0.0000001
+          - 0.0000001
 
 # Debug
 gradient_display_factor: 200
