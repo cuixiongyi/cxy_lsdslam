@@ -225,6 +225,9 @@ cxy::Tracker::Tracker(const int& width, const int& height)
 
  }// pyramid
 
+    displayPointCloud(0, refFrameInput,
+                      newFrameInput,
+                      refToFramePose);
 
     lastResidual = lastIterResidual;
 
@@ -491,6 +494,79 @@ cxy::Vector6f cxy::Tracker::getJacobian_Update(NormalEquationLeastSquare& ls)
     return result;
 }
 
+
+    void cxy::Tracker::displayPointCloud(const int& level,
+                                         const cxy::TrackRefFrame *const refFrameInput,
+                                         const cxy::Frame *const newFrameInput,
+                                         Sophus::SE3f &poseInput)
+    {
+
+        const auto width = newFrameInput->getWidth(level);
+        const auto height = newFrameInput->getHeight(level);
+        const auto fx = newFrameInput->getFx(level);
+        const auto cx = newFrameInput->getCx(level);
+        const auto fy = newFrameInput->getFy(level);
+        const auto cy = newFrameInput->getCy(level);
+
+        cv::Mat imageDrawTmp(cv::Size(width, height), CV_32FC1, (void*)newFrameInput->getImage(level));
+        cv::Mat imageDrawMono;
+        cv::Mat imageDraw;
+        imageDrawTmp.convertTo(imageDrawMono, CV_8UC1);
+        cv::cvtColor(imageDrawMono, imageDraw, CV_GRAY2RGB);
+
+
+        const auto size = refFrameInput->getNumData(level);
+        /// get transformation
+        const auto rotationMat = poseInput.rotationMatrix();
+        const auto translationVec = poseInput.translation();
+
+        ///pointers
+        Eigen::Vector3f const* point3DPtr = refFrameInput->getPoint3D(level);
+        Eigen::Vector2f const* refColorVarPtr = refFrameInput->getPointColor_Var(level);
+        Eigen::Vector4f const* newFrameGradPtr = newFrameInput->getGradient(level);
+        auto isGoodPtr = getMBuf_isPixelGood();
+        auto idxPtr = refFrameInput->getPointPosInXYGrid(level);
+
+
+
+        for (int ii = 0; ii < size; ++ii, ++idxPtr, ++point3DPtr, ++refColorVarPtr, ++isGoodPtr) {
+            /// project the ref 3D point into the new Frame
+            Eigen::Vector3f projectedPoint = rotationMat * (*point3DPtr) + translationVec;
+            float u_new = (projectedPoint[0] / projectedPoint[2]) * fx + cx;
+            float v_new = (projectedPoint[1] / projectedPoint[2]) * fy + cy;
+
+            if (!(u_new > 1 && u_new < width - 2 && v_new > 1 && v_new < height - 2)) {
+                continue;
+            }
+
+            imageDraw.at<uchar>(v_new, u_new, 0) = 254;
+
+            /*
+            // DEBUG STUFF
+            if(plotTrackingIterationInfo || plotResidual)
+            {
+                // for debug plot only: find x,y again.
+                // horribly inefficient, but who cares at this point...
+                Eigen::Vector3f point = KLvl * (*refPoint);
+                int x = point[0] / point[2] + 0.5f;
+                int y = point[1] / point[2] + 0.5f;
+
+                if(plotTrackingIterationInfo)
+                {
+                    setPixelInCvMat(&debugImageOldImageSource,getGrayCvPixel((float)resInterp[2]),u_new+0.5,v_new+0.5,(width/w));
+                    setPixelInCvMat(&debugImageOldImageWarped,getGrayCvPixel((float)resInterp[2]),x,y,(width/w));
+                }
+                if(isGood)
+                    setPixelInCvMat(&debugImageResiduals,getGrayCvPixel(residual+128),x,y,(width/w));
+                else
+                    setPixelInCvMat(&debugImageResiduals,cv::Vec3b(0,0,255),x,y,(width/w));
+
+            }
+             */
+        }
+//        DebugUtility::DisplayImage(imageDraw, "PointCould Tracking Image");
+        cv::imshow("PointCould Tracking Image", imageDraw);
+    }
 
 
 

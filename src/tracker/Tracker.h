@@ -22,6 +22,10 @@ namespace cxy
                             Frame *const newFrameInput,
                             const Sophus::SE3f& initPose);
         int track_WithDepth();
+        void displayPointCloud(const int& level,
+                               const cxy::TrackRefFrame *const refFrameInput,
+                               const cxy::Frame *const newFrameInput,
+                               Sophus::SE3f &poseInput);
 
 
 
