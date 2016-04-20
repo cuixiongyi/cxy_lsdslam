@@ -22,7 +22,7 @@ namespace cxy
                             Frame *const newFrameInput,
                             const Sophus::SE3f& initPose);
         int track_WithDepth();
-        void displayPointCloud(const int& level,
+        void displayPointCloud(const int& levelInput,
                                const cxy::TrackRefFrame *const refFrameInput,
                                const cxy::Frame *const newFrameInput,
                                Sophus::SE3f &poseInput);
@@ -40,6 +40,9 @@ namespace cxy
         float getWeight_Residual(const Sophus::SE3f &refToFrame);
 
         Vector6f getJacobian_Update(NormalEquationLeastSquare& ls);
+
+        /// This is a hack
+        TrackRefFrame const* mNewFrameRefTrackFrame = nullptr;
 
     private:
         TrackRefFrame const* mRefTrackFrame = nullptr;

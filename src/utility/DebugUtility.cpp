@@ -97,12 +97,15 @@ namespace cxy
 
     void DebugUtility::PublishPointCloudThread()
     {
-        ros::Rate rate(5);
+        ros::Rate rate(1);
         while (true)
         {
+//            LOG(INFO)<<"publish pointcloud";
             pubPointCloud->publish(*mPointcloudData);
             if (mIsPublishThreadShouldStop)
             {
+//                LOG(INFO)<<"break publis pointcloud";
+
                 mIsPublishThreadShouldStop = false;
                 break;
             }
@@ -141,6 +144,7 @@ namespace cxy
         std::cin>>tmp;
 
         mIsPublishThreadShouldStop = true;
+        pubThread.join();
     }
     void DebugUtility::PublishPointCloud(Eigen::Vector3f const *pointInput, unsigned int size, const std::string& pointcloudName)
     {
@@ -173,8 +177,51 @@ namespace cxy
         std::string tmp;
         std::cin>>tmp;
 
+        LOG(INFO)<<"signal to stop pointcloud";
         mIsPublishThreadShouldStop = true;
+        pubThread.join();
+        LOG(INFO)<<"publish pointcloud stopped";
+
+
     }
+
+    void DebugUtility::PublishPointCloud(const std::vector<PointXYZIf>& pointInput, const std::string& pointcloudName)
+    {
+        auto pubTmp = DebugUtilityHandle::getHandel().advertise<sensor_msgs::PointCloud2>(pointcloudName, 1);
+        pubPointCloud = std::unique_ptr<ros::Publisher>(new ros::Publisher);
+        *pubPointCloud = pubTmp;
+        //pointcloudData = new std::unique_ptr<sensor_msgs::PointCloud2>();
+        PointCloudXYZI::Ptr pointcloudXYZI(new PointCloudXYZI());
+        pointcloudXYZI->header.frame_id = "world";
+        pointcloudXYZI->width = pointcloudXYZI->height = 0;
+        pointcloudXYZI->reserve(pointInput.size());
+
+        for (const auto& point : pointInput)
+        {
+            auto pointpcl = pcl::PointXYZI();
+            pointpcl.x = point.x;
+            pointpcl.y = point.y;
+            pointpcl.z = point.z;
+            pointpcl.intensity = point.intensity;
+            pointcloudXYZI->push_back(pointpcl);
+
+        }
+
+        mPointcloudData = std::unique_ptr<sensor_msgs::PointCloud2>(new sensor_msgs::PointCloud2());
+        pcl::toROSMsg<pcl::PointXYZI>(*pointcloudXYZI, *mPointcloudData);
+//        mPointcloudDataPtr = pointcloudXYZI
+        mIsPublishThreadShouldStop = false;
+        std::thread pubThread(&DebugUtility::PublishPointCloudThread);
+        std::string tmp;
+        std::cin>>tmp;
+
+        LOG(INFO)<<"signal to stop pointcloud";
+        mIsPublishThreadShouldStop = true;
+        pubThread.join();
+        LOG(INFO)<<"publish pointcloud stopped";
+
+    }
+
 
 
 }

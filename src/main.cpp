@@ -128,12 +128,19 @@ int main(int argc, char** argv)
             imageTrackRef = imgUndistort;
             continue;
         }
+
         cv::imshow("imgUndistort", imgUndistort);
         cv::imshow("ImageTrackReference", imageTrackRef);
         cv::waitKey(0);
+
+        frame.setDepth(imgDepth.data, false);
+        cxy::TrackRefFrame* newFrameTrackRefFramePtr = new cxy::TrackRefFrame(&frame);
+
+        tracker.mNewFrameRefTrackFrame = newFrameTrackRefFramePtr;
         tracker.track_NoDepth(trackRefFramePtr, &frame, frameToRef);
 
         timeStampFake += timeInterval;
+        delete newFrameTrackRefFramePtr;
 
     }
 

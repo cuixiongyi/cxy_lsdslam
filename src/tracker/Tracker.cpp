@@ -69,6 +69,11 @@ cxy::Tracker::Tracker(const int& width, const int& height)
     NormalEquationLeastSquare ls;
     float lastIterResidual = 0.f;
 
+    /// Publish Point in new frame as ground truth
+    if (mNewFrameRefTrackFrame != nullptr)
+    {
+        DebugUtility::PublishPointCloud(mNewFrameRefTrackFrame->getPoint3D(0), mNewFrameRefTrackFrame->getNumData(0), "new_frame_ground_truth");
+    }
     //// loop over levels
     LOG(INFO)<< "Start track";
  for (int ll = MAX_PYRAMID_LEVEL - 1; ll >= 0; --ll)
@@ -106,6 +111,10 @@ cxy::Tracker::Tracker(const int& width, const int& height)
 //        getJacobian_Update();
          getJacobian_Update(ls);
          unsigned int incTry=0;
+
+         displayPointCloud(0, refFrameInput,
+                           newFrameInput,
+                           refToFramePose);
 
          while(true)
          {
@@ -225,9 +234,8 @@ cxy::Tracker::Tracker(const int& width, const int& height)
 
  }// pyramid
 
-    displayPointCloud(0, refFrameInput,
-                      newFrameInput,
-                      refToFramePose);
+
+
 
     lastResidual = lastIterResidual;
 
@@ -501,33 +509,37 @@ cxy::Vector6f cxy::Tracker::getJacobian_Update(NormalEquationLeastSquare& ls)
                                          Sophus::SE3f &poseInput)
     {
 
-        const auto width = newFrameInput->getWidth(level);
-        const auto height = newFrameInput->getHeight(level);
-        const auto fx = newFrameInput->getFx(level);
-        const auto cx = newFrameInput->getCx(level);
-        const auto fy = newFrameInput->getFy(level);
-        const auto cy = newFrameInput->getCy(level);
+        auto levelInput = 0;
+        const auto width = newFrameInput->getWidth(levelInput);
+        const auto height = newFrameInput->getHeight(levelInput);
+        const auto fx = newFrameInput->getFx(levelInput);
+        const auto cx = newFrameInput->getCx(levelInput);
+        const auto fy = newFrameInput->getFy(levelInput);
+        const auto cy = newFrameInput->getCy(levelInput);
 
-        cv::Mat imageDrawTmp(cv::Size(width, height), CV_32FC1, (void*)newFrameInput->getImage(level));
+        cv::Mat imageDrawTmp(cv::Size(width, height), CV_32FC1, (void*)newFrameInput->getImage(levelInput));
         cv::Mat imageDrawMono;
         cv::Mat imageDraw;
         imageDrawTmp.convertTo(imageDrawMono, CV_8UC1);
         cv::cvtColor(imageDrawMono, imageDraw, CV_GRAY2RGB);
 
 
-        const auto size = refFrameInput->getNumData(level);
+        const auto size = refFrameInput->getNumData(levelInput);
         /// get transformation
         const auto rotationMat = poseInput.rotationMatrix();
         const auto translationVec = poseInput.translation();
 
         ///pointers
-        Eigen::Vector3f const* point3DPtr = refFrameInput->getPoint3D(level);
-        Eigen::Vector2f const* refColorVarPtr = refFrameInput->getPointColor_Var(level);
-        Eigen::Vector4f const* newFrameGradPtr = newFrameInput->getGradient(level);
+        Eigen::Vector3f const* point3DPtr = refFrameInput->getPoint3D(levelInput);
+        Eigen::Vector2f const* refColorVarPtr = refFrameInput->getPointColor_Var(levelInput);
+        Eigen::Vector4f const* newFrameGradPtr = newFrameInput->getGradient(levelInput);
         auto isGoodPtr = getMBuf_isPixelGood();
-        auto idxPtr = refFrameInput->getPointPosInXYGrid(level);
+        auto idxPtr = refFrameInput->getPointPosInXYGrid(levelInput);
 
 
+
+        std::vector<PointXYZIf> pointcloud;
+        pointcloud.reserve(size);
 
         for (int ii = 0; ii < size; ++ii, ++idxPtr, ++point3DPtr, ++refColorVarPtr, ++isGoodPtr) {
             /// project the ref 3D point into the new Frame
@@ -539,8 +551,10 @@ cxy::Vector6f cxy::Tracker::getJacobian_Update(NormalEquationLeastSquare& ls)
                 continue;
             }
 
-            imageDraw.at<uchar>(v_new, u_new, 0) = 254;
+            Eigen::Vector3f resInterp = ImageHelper::getInterpolatedElement43(newFrameGradPtr, u_new, v_new, width);
 
+            imageDraw.at<uchar>(v_new, u_new, 0) = 254;
+            pointcloud.emplace_back(PointXYZIf(projectedPoint[0], projectedPoint[1], projectedPoint[2], resInterp[2]));
             /*
             // DEBUG STUFF
             if(plotTrackingIterationInfo || plotResidual)
@@ -565,7 +579,8 @@ cxy::Vector6f cxy::Tracker::getJacobian_Update(NormalEquationLeastSquare& ls)
              */
         }
 //        DebugUtility::DisplayImage(imageDraw, "PointCould Tracking Image");
-        cv::imshow("PointCould Tracking Image", imageDraw);
+//        cv::imshow("PointCould Tracking Image", imageDraw);
+        DebugUtility::PublishPointCloud(pointcloud, "newFrame");
     }
 
 

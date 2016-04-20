@@ -30,6 +30,7 @@ namespace cxy
 
         static void PublishPointCloud(Eigen::Vector3f const *pointInput, unsigned int size, const std::string& pointcloudName);
         static void PublishPointCloud(float const*const xPtr, float const*const yPtr, float const*const zPtr, float const*const intensityPtr, unsigned int size, const std::string& pointcloudName);
+        static void PublishPointCloud(const std::vector<PointXYZIf>& pointInput, const std::string& pointcloudName);
 
 
         //        static sensor_msgs::PointCloud
