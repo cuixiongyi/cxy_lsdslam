@@ -25,7 +25,8 @@ namespace cxy
         void displayPointCloud(const int& levelInput,
                                const cxy::TrackRefFrame *const refFrameInput,
                                const cxy::Frame *const newFrameInput,
-                               Sophus::SE3f &poseInput);
+                               Sophus::SE3f &poseInput,
+                               const float& time = 1.0);
 
 
 

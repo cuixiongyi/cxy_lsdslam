@@ -64,7 +64,7 @@ cxy::Tracker::Tracker(const int& width, const int& height)
 
     mRefTrackFrame = refFrameInput;
     mNewTrackFrame = newFrameInput;
-
+    ros::Publisher errorPub = DebugUtility::DebugUtilityHandle::getHandel().advertise<std_msgs::Float32>("track_error", 1);
     Sophus::SE3f refToFramePose = frameToRefInput.inverse();
     NormalEquationLeastSquare ls;
     float lastIterResidual = 0.f;
@@ -114,7 +114,12 @@ cxy::Tracker::Tracker(const int& width, const int& height)
 
          displayPointCloud(0, refFrameInput,
                            newFrameInput,
-                           refToFramePose);
+                           refToFramePose,
+                            0.2);
+         std_msgs::Float32 error_msg;
+         error_msg.data = lastErr;
+         errorPub.publish(error_msg);
+
 
          while(true)
          {
@@ -506,7 +511,8 @@ cxy::Vector6f cxy::Tracker::getJacobian_Update(NormalEquationLeastSquare& ls)
     void cxy::Tracker::displayPointCloud(const int& level,
                                          const cxy::TrackRefFrame *const refFrameInput,
                                          const cxy::Frame *const newFrameInput,
-                                         Sophus::SE3f &poseInput)
+                                         Sophus::SE3f &poseInput,
+                                         const float& time)
     {
 
         auto levelInput = 0;
@@ -580,7 +586,7 @@ cxy::Vector6f cxy::Tracker::getJacobian_Update(NormalEquationLeastSquare& ls)
         }
 //        DebugUtility::DisplayImage(imageDraw, "PointCould Tracking Image");
 //        cv::imshow("PointCould Tracking Image", imageDraw);
-        DebugUtility::PublishPointCloud(pointcloud, "newFrame");
+        DebugUtility::PublishPointCloud(pointcloud, "newFrame", time);
     }
 
 

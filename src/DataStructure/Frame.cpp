@@ -31,7 +31,7 @@ namespace cxy
         for (int ii = 0; ii < level; ++ii)
         {
             buildImage(ii);
-//            cxy::DebugUtility::DisplayImage(mWidth[ii], mHeight[ii], CV_32FC1, mImage[ii].get(), "PyramidTest");
+            cxy::DebugUtility::DisplayImage(mWidth[ii], mHeight[ii], CV_32FC1, mImage[ii].get(), "PyramidTest");
             buildGradient(ii);
             buildMaxGradient(ii);
             //cxy::DebugUtility::DisplayImage(mWidth[ii], height[ii], CV_32FC1, mMaxGradients[ii].get(), "MaxGradient", true);
@@ -346,52 +346,52 @@ namespace cxy
 
         // 1. write abs gradients in real 
         Eigen::Vector4f* gradxyii_pt = mGradient[level].get() + width;
-        float* maxgrad_pt = _MaxGradientPointer + width;
-        float* maxgrad_pt_max = maxgrad_pt + width*(height-1);
+        float* maxGradPtr = _MaxGradientPointer + width;
+        float* maxgrad_pt_end = maxGradPtr + width*(height-1);
 
-        for(; maxgrad_pt < maxgrad_pt_max; maxgrad_pt++, gradxyii_pt++)
+        for(; maxGradPtr < maxgrad_pt_end; maxGradPtr++, gradxyii_pt++)
         {
             float dx = *((float*)gradxyii_pt);
             float dy = *(1+(float*)gradxyii_pt);
-            *maxgrad_pt = sqrtf(dx*dx + dy*dy);
+            *maxGradPtr = sqrtf(dx*dx + dy*dy);
         }
 
         // 2. smear up/down direction into temp buffer
-        maxgrad_pt = _MaxGradientPointer + width + 1;
-        maxgrad_pt_max = _MaxGradientPointer + width*(height-1)-1;
-        float* maxgrad_t_pt = _maxGradTempPointer + width+1;
-        for(;maxgrad_pt<maxgrad_pt_max; maxgrad_pt++, maxgrad_t_pt++)
+        maxGradPtr = _MaxGradientPointer + width + 1;
+        maxgrad_pt_end = _MaxGradientPointer + width*(height-1)-1;
+        float* maxGrad2Ptr = _maxGradTempPointer + width+1;
+        for(;maxGradPtr<maxgrad_pt_end; maxGradPtr++, maxGrad2Ptr++)
         {
-            float g1 = maxgrad_pt[-width];
-            float g2 = maxgrad_pt[0];
+            float g1 = maxGradPtr[-width];
+            float g2 = maxGradPtr[0];
             if(g1 < g2) g1 = g2;
-            float g3 = maxgrad_pt[width];
+            float g3 = maxGradPtr[width];
             if(g1 < g3)
-                *maxgrad_t_pt = g3;
+                *maxGrad2Ptr = g3;
             else
-                *maxgrad_t_pt = g1;
+                *maxGrad2Ptr = g1;
         }
 
         float numMappablePixels = 0;
         // 2. smear left/right direction into real mData
-        maxgrad_pt = _MaxGradientPointer + width+1;
-        maxgrad_pt_max = _MaxGradientPointer + width*(height-1)-1;
-        maxgrad_t_pt = _maxGradTempPointer + width+1;
-        for(;maxgrad_pt<maxgrad_pt_max; maxgrad_pt++, maxgrad_t_pt++)
+        maxGradPtr = _MaxGradientPointer + width+1;
+        maxgrad_pt_end = _MaxGradientPointer + width*(height-1)-1;
+        maxGrad2Ptr = _maxGradTempPointer + width+1;
+        for(;maxGradPtr<maxgrad_pt_end; maxGradPtr++, maxGrad2Ptr++)
         {
-            float g1 = maxgrad_t_pt[-1];
-            float g2 = maxgrad_t_pt[0];
+            float g1 = maxGrad2Ptr[-1];
+            float g2 = maxGrad2Ptr[0];
             if(g1 < g2) g1 = g2;
-            float g3 = maxgrad_t_pt[1];
+            float g3 = maxGrad2Ptr[1];
             if(g1 < g3)
             {
-                *maxgrad_pt = g3;
+                *maxGradPtr = g3;
                 if(g3 >= _Graident_Threshold)
                     numMappablePixels++;
             }
             else
             {
-                *maxgrad_pt = g1;
+                *maxGradPtr = g1;
                 if(g1 >= _Graident_Threshold)
                     numMappablePixels++;
             }

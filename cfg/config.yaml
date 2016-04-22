@@ -21,15 +21,15 @@ Const_ImageColorVariance: 5
 Const_Huber_D: 3
 Const_Max_Pixel_Diff_Accept_Throush: 800
 Const_Max_Diff_Grad_Multi:   0.25
-LambdaSuccessFac: 0.5
-LambdaFailFactor: 2.0
+LambdaSuccessFac: 0.3
+LambdaFailFactor: 1.8
 LambdaInitialLevel:
           - 0
           - 0
           - 0
 IterationNumLevel:
           - 10
-          - 25
+          - 35
           - 50
 ConvergenceEps:
           - 0.999

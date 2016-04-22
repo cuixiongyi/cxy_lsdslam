@@ -19,7 +19,8 @@ namespace cxy
         /*
              * Debug: display the mImage
              */
-
+        static int imageID = 0;
+        ++imageID;
         ArrayPointer<float> dataPtrUnique = MemoryManager::ArrayPointer_Allocator<float>(width*height);
         auto tmpPtr = (float*)data;
         auto dataPtr = dataPtrUnique.get();
@@ -73,6 +74,7 @@ namespace cxy
 
 //        cv::convertScaleAbs(imageTest, imageTest2);
         cv::imshow(windowName, imageTest2);
+        cv::imwrite("/home/xiongyi/workspace/src/"+std::to_string(imageID)+".jpg", imageTest2);
         cv::waitKey(0);
 
         if ( ! keep)
@@ -95,9 +97,11 @@ namespace cxy
         return ;
     }
 
-    void DebugUtility::PublishPointCloudThread()
+    void DebugUtility::PublishPointCloudThread(const float& time)
     {
-        ros::Rate rate(1);
+        const int Const_rate = 6;
+        ros::Rate rate(Const_rate);
+        int counter = 0;
         while (true)
         {
 //            LOG(INFO)<<"publish pointcloud";
@@ -109,6 +113,9 @@ namespace cxy
                 mIsPublishThreadShouldStop = false;
                 break;
             }
+            if (Const_rate * time < counter)
+                break;
+            ++counter;
             rate.sleep();
         }
     }
@@ -139,11 +146,14 @@ namespace cxy
         pcl::toROSMsg<pcl::PointXYZI>(*pointcloudXYZI, *mPointcloudData);
 //        mPointcloudDataPtr = pointcloudXYZI
         mIsPublishThreadShouldStop = false;
-        std::thread pubThread(&DebugUtility::PublishPointCloudThread);
-        std::string tmp;
-        std::cin>>tmp;
+//        auto functor = std::bind(&DebugUtility::PublishPointCloudThread, time);
+//        std::thread pubThread(&functor);
+        std::thread pubThread(&DebugUtility::PublishPointCloudThread, 1.0);
 
-        mIsPublishThreadShouldStop = true;
+//        std::string tmp;
+//        std::cin>>tmp;
+//
+//        mIsPublishThreadShouldStop = true;
         pubThread.join();
     }
     void DebugUtility::PublishPointCloud(Eigen::Vector3f const *pointInput, unsigned int size, const std::string& pointcloudName)
@@ -173,19 +183,22 @@ namespace cxy
         pcl::toROSMsg<pcl::PointXYZI>(*pointcloudXYZI, *mPointcloudData);
 //        mPointcloudDataPtr = pointcloudXYZI
         mIsPublishThreadShouldStop = false;
-        std::thread pubThread(&DebugUtility::PublishPointCloudThread);
-        std::string tmp;
-        std::cin>>tmp;
+//        auto functor = std::bind(&DebugUtility::PublishPointCloudThread, time);
+        std::thread pubThread(&DebugUtility::PublishPointCloudThread, 1.0);
 
-        LOG(INFO)<<"signal to stop pointcloud";
-        mIsPublishThreadShouldStop = true;
+//        std::thread pubThread(&functor);
+//        std::string tmp;
+//        std::cin>>tmp;
+
+//        LOG(INFO)<<"signal to stop pointcloud";
+//        mIsPublishThreadShouldStop = true;
         pubThread.join();
-        LOG(INFO)<<"publish pointcloud stopped";
+//        LOG(INFO)<<"publish pointcloud stopped";
 
 
     }
 
-    void DebugUtility::PublishPointCloud(const std::vector<PointXYZIf>& pointInput, const std::string& pointcloudName)
+    void DebugUtility::PublishPointCloud(const std::vector<PointXYZIf>& pointInput, const std::string& pointcloudName, const float& time)
     {
         auto pubTmp = DebugUtilityHandle::getHandel().advertise<sensor_msgs::PointCloud2>(pointcloudName, 1);
         pubPointCloud = std::unique_ptr<ros::Publisher>(new ros::Publisher);
@@ -211,14 +224,15 @@ namespace cxy
         pcl::toROSMsg<pcl::PointXYZI>(*pointcloudXYZI, *mPointcloudData);
 //        mPointcloudDataPtr = pointcloudXYZI
         mIsPublishThreadShouldStop = false;
-        std::thread pubThread(&DebugUtility::PublishPointCloudThread);
-        std::string tmp;
-        std::cin>>tmp;
+//        auto functor = std::bind(&DebugUtility::PublishPointCloudThread, time);
+        std::thread pubThread(&DebugUtility::PublishPointCloudThread, time);
+//        std::string tmp;
+//        std::cin>>tmp;
 
-        LOG(INFO)<<"signal to stop pointcloud";
-        mIsPublishThreadShouldStop = true;
+//        LOG(INFO)<<"signal to stop pointcloud";
+//        mIsPublishThreadShouldStop = true;
         pubThread.join();
-        LOG(INFO)<<"publish pointcloud stopped";
+//        LOG(INFO)<<"publish pointcloud stopped";
 
     }
 
